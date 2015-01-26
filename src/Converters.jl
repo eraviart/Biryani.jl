@@ -22,7 +22,7 @@
 module Converters
 
 
-export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, input_to_email, input_to_int, item_or_sequence, make_item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_int, to_value, to_value_error, uniform_sequence
+export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, input_to_bool, input_to_email, input_to_int, item_or_sequence, make_item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_value, to_value_error, uniform_sequence
 
 
 import Base: strip
@@ -148,6 +148,17 @@ function fail(; error = nothing)
     )
   end
 end
+
+
+input_to_bool(convertible::Convertible) = pipe(strip, to_bool)(convertible)
+"""Convert a string to a boolean.
+
+.. warning:: Like most converters, a ``nothing`` value is not converted.
+
+  When you want ``nothing`` to be converted to ``false``, use::
+
+    pipe(input_to_bool, default(false))
+"""
 
 
 input_to_email(convertible::Convertible) = pipe(strip, string_to_email)(convertible)
@@ -373,8 +384,44 @@ function test_isa(data_type::DataType; error = nothing)
 end
 
 
+function to_bool(convertible::Convertible)
+  """Convert a julia data to a boolean.
+
+  .. note:: For a converter that doesn't require a clean string, see :func:`input_to_bool`.
+
+  .. note:: For a converter that accepts special strings like "f", "off", "no", etc, see :func:`guess_bool`.
+
+  .. warning:: Like most converters, a ``nothing`` value is not converted.
+
+    When you want ``nothing`` to be converted to ``false``, use::
+
+      pipe(str_to_bool, default(False))
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  return to_bool(convertible.value, convertible.context)
+end
+
+function to_bool(value, context::Context)
+  try
+    return Convertible(bool(convert(Int, value)), context)
+  catch
+    return Convertible(value, context, N_("Value must be a boolean."))
+  end
+end
+
+function to_bool(value::String, context::Context)
+  try
+    return Convertible(bool(int(value)), context)
+  catch
+    return Convertible(value, context, N_("Value must be a boolean."))
+  end
+end
+
+
 function to_int(convertible::Convertible)
-  """Convert any Julia data to an integer.
+  """Convert a Julia data to an integer.
 
   .. warning:: Like most converters, a ``nothing`` value is not converted.
   """

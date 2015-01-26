@@ -72,6 +72,17 @@ using Converters
 @test Convertible(42) |> fail(error = "Wrong answer.") |> to_value_error == (42, "Wrong answer.")
 @test Convertible(nothing) |> fail() |> to_value_error == (nothing, "An error occured.")
 
+# input_to_bool
+@test Convertible("0") |> input_to_bool |> to_value === false
+@test Convertible("   0\n  ") |> input_to_bool |> to_value === false
+@test Convertible("1") |> input_to_bool |> to_value === true
+@test Convertible("   1\n  ") |> input_to_bool |> to_value === true
+@test Convertible("42") |> input_to_bool |> to_value == true
+@test Convertible("   \n  ") |> input_to_bool |> to_value === nothing
+@test Convertible(nothing) |> input_to_bool |> to_value === nothing
+@test Convertible("vrai") |> input_to_bool |> to_value_error == ("vrai", "Value must be a boolean.")
+@test Convertible("on") |> input_to_bool |> to_value_error == ("on", "Value must be a boolean.")
+
 # input_to_email
 @test Convertible("john@doe.name") |> input_to_email |> to_value == "john@doe.name"
 @test Convertible("mailto:john@doe.name") |> input_to_email |> to_value == "john@doe.name"
@@ -341,6 +352,15 @@ tuple_non_strict_converter = struct(
 @test Convertible(42) |> test_isa(String, error = "Value is not a string.") |> to_value_error == (42,
   "Value is not a string.")
 @test Convertible(nothing) |> test_isa(String) |> to_value === nothing
+
+# to_bool
+@test Convertible("0") |> to_bool |> to_value === false
+@test Convertible("1") |> to_bool |> to_value === true
+@test Convertible(42) |> to_bool |> to_value == true
+@test Convertible("42") |> to_bool |> to_value == true
+@test Convertible(nothing) |> to_bool |> to_value === nothing
+@test Convertible("vrai") |> to_bool |> to_value_error == ("vrai", "Value must be a boolean.")
+@test Convertible("on") |> to_bool |> to_value_error == ("on", "Value must be a boolean.")
 
 # to_int
 @test Convertible(42) |> to_int |> to_value == 42
