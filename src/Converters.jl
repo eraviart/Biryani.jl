@@ -22,7 +22,7 @@
 module Converters
 
 
-export call, check, condition, Convertible, empty_to_nothing, fail, input_to_email, input_to_int, pipe, require, string_to_email, strip, struct, test_between, test_greater_or_equal, test, test_isa, to_int, uniform_array, value_error_couple
+export call, check, condition, Convertible, empty_to_nothing, extract_when_singleton, fail, input_to_email, input_to_int, item_or_sequence, pipe, require, string_to_email, strip, struct, test_between, test_greater_or_equal, test, test_isa, to_int, uniform_sequence, value_error_couple
 
 
 import Base: strip
@@ -123,6 +123,13 @@ eval_error(context::Context, ::Nothing) = nothing
 eval_error(context::Context, message::String) = _(context, message)
 
 
+extract_when_singleton(convertible::Convertible) = condition(
+  test(value -> length(value) == 1),
+  call(value -> value[1]),
+)(convertible)
+"""Extract first item of sequence when it is a singleton, otherwise keep it unchanged."""
+
+
 function fail(; error = nothing)
   """Return a converter that always returns an error."""
   return convertible::Convertible -> begin
@@ -144,6 +151,20 @@ input_to_email(convertible::Convertible) = pipe(strip, string_to_email)(converti
 
 input_to_int(convertible::Convertible) = pipe(strip, to_int)(convertible)
 """Convert a string to an integer."""
+
+
+function item_or_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
+  """Return a converter that accepts either an item or a sequence of items and applies the given converter to them."""
+  return convertible::Convertible -> condition(
+    test_isa(sequence_type),
+    pipe(
+      uniform_sequence(converters..., drop_nothing = drop_nothing, item_type = item_type,
+        sequence_type = sequence_type),
+      extract_when_singleton,
+    ),
+    pipe(converters...),
+  )(convertible)
+end
 
 
 function pipe(converters::Function...)
@@ -345,8 +366,9 @@ function to_int(value::String, context::Context)
 end
 
 
-function uniform_array(converters::Function...; drop_nothing = false, item_type = nothing)
+function uniform_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
   """Return a converter that applies the same converter to each value of an array."""
+  # TODO: Handle sequence_type (Array, Tuple...)
   return convertible::Convertible -> begin
     if convertible.error !== nothing || convertible.value === nothing
       return convertible

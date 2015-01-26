@@ -55,6 +55,12 @@ using Converters
 @test Convertible(["answer" => 42]) |> empty_to_nothing |> check == ["answer" => 42]
 @test Convertible(nothing) |> empty_to_nothing |> check === nothing
 
+# extract_when_singleton
+@test Convertible([42]) |> extract_when_singleton |> check == 42
+@test Convertible([42, 43]) |> extract_when_singleton |> check == [42, 43]
+@test Convertible([]) |> extract_when_singleton |> check == []
+@test Convertible(nothing) |> extract_when_singleton |> check === nothing
+
 # fail
 @test Convertible(42) |> fail() |> value_error_couple == (42, "An error occured.")
 @test Convertible(42) |> fail(error = "Wrong answer.") |> value_error_couple == (42, "Wrong answer.")
@@ -78,6 +84,19 @@ using Converters
 @test Convertible("42.75") |> input_to_int |> value_error_couple == ("42.75", "Value must be an integer.")
 @test Convertible("42,75") |> input_to_int |> value_error_couple == ("42,75", "Value must be an integer.")
 @test Convertible(nothing) |> input_to_int |> check === nothing
+
+# item_or_sequence
+@test Convertible("42") |> item_or_sequence(input_to_int) |> check == 42
+@test Convertible(["42"]) |> item_or_sequence(input_to_int) |> check == 42
+@test Convertible(["42", "43"]) |> item_or_sequence(input_to_int) |> check == [42, 43]
+@test Convertible(["42", "43", "Hello world!"]) |> item_or_sequence(input_to_int) |> value_error_couple == (
+  [42, 43, "Hello world!"], [3 => "Value must be an integer."])
+@test Convertible(nothing) |> item_or_sequence(input_to_int) |> check === nothing
+@test Convertible([nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> check == []
+@test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int) |> check == [nothing, nothing]
+@test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> check == []
+@test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int) |> check == [42, nothing, 43]
+@test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int, drop_nothing = true) |> check == [42, 43]
 
 # pipe
 @test Convertible(42) |> pipe() |> check == 42
@@ -306,15 +325,15 @@ tuple_non_strict_converter = struct(
 @test Convertible("42,75") |> to_int |> value_error_couple == ("42,75", "Value must be an integer.")
 @test Convertible(nothing) |> to_int |> check === nothing
 
-# uniform_array
-@test Convertible(["42"]) |> uniform_array(input_to_int) |> check == [42]
-@test Convertible(["42", "43"]) |> uniform_array(input_to_int) |> check == [42, 43]
-@test Convertible(["42", "43", "Hello world!"]) |> uniform_array(input_to_int) |> value_error_couple == (
+# uniform_sequence
+@test Convertible(["42"]) |> uniform_sequence(input_to_int) |> check == [42]
+@test Convertible(["42", "43"]) |> uniform_sequence(input_to_int) |> check == [42, 43]
+@test Convertible(["42", "43", "Hello world!"]) |> uniform_sequence(input_to_int) |> value_error_couple == (
   [42, 43, "Hello world!"], [3 => "Value must be an integer."])
-@test Convertible([nothing, nothing]) |> uniform_array(input_to_int) |> check == [nothing, nothing]
-@test Convertible([nothing, nothing]) |> uniform_array(input_to_int, drop_nothing = true) |> check == []
-@test Convertible(["42", "    \n  ", "43"]) |> uniform_array(input_to_int) |> check == [42, nothing, 43]
-@test Convertible(["42", "    \n  ", "43"]) |> uniform_array(input_to_int, drop_nothing = true) |> check == [42, 43]
+@test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int) |> check == [nothing, nothing]
+@test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int, drop_nothing = true) |> check == []
+@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int) |> check == [42, nothing, 43]
+@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int, drop_nothing = true) |> check == [42, 43]
 
 
 # Test tools.
