@@ -36,13 +36,13 @@ using Converters
 @test_throws MethodError Convertible(nothing) |> call(value -> value + 1, handle_nothing = true) |> to_value
 
 # condition
-# detect_unknown_values = condition(
-#   test_in(['?', 'x']),
-#   set_value(False),
-#   set_value(True),
-# )
-# @test detect_unknown_values("Hello world!") === true
-# @test detect_unknown_values("?") === false
+detect_unknown_values = condition(
+  test_in(['?', 'x']),
+  from_value(false),
+  from_value(true),
+)
+@test Convertible("Hello world!") |> detect_unknown_values |> to_value === true
+@test Convertible('x') |> detect_unknown_values |> to_value === false
 
 # default
 @test Convertible(nothing) |> default(42) |> to_value == 42
@@ -71,6 +71,12 @@ using Converters
 @test Convertible(42) |> fail() |> to_value_error == (42, "An error occured.")
 @test Convertible(42) |> fail(error = "Wrong answer.") |> to_value_error == (42, "Wrong answer.")
 @test Convertible(nothing) |> fail() |> to_value_error == (nothing, "An error occured.")
+
+# from_value
+@test Convertible("Answer to the Ultimate Question of Life, the Universe, and Everything") |> from_value(42) |>
+  to_value == 42
+@test Convertible(nothing) |> from_value(42) |> to_value == 42
+@test Convertible("Hello world!") |> fail() |> from_value(42) |> to_value_error == ("Hello world!", "An error occured.")
 
 # input_to_bool
 @test Convertible("0") |> input_to_bool |> to_value === false

@@ -22,7 +22,7 @@
 module Converters
 
 
-export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, input_to_bool, input_to_email, input_to_int, item_or_sequence, make_item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_value, to_value_error, uniform_sequence
+export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, make_item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_value, to_value_error, uniform_sequence
 
 
 import Base: strip
@@ -94,9 +94,9 @@ end
 
 
 function default(value)
-  """Return a converter that replace a ``nothing`` value by given one.
+  """Return a converter that replace a ``nothing`` value with given one.
 
-  .. note:: See converter :func:`set_value` to replace a non-``default`` value.
+  .. note:: See converter :func:`from_value` to replace a non-``default`` value.
   """
   return convertible::Convertible -> begin
     if convertible.error !== nothing || convertible.value !== nothing
@@ -146,6 +146,17 @@ function fail(; error = nothing)
       convertible.context,
       error === nothing ? N_("An error occured.") : error,
     )
+  end
+end
+
+
+function from_value(value)
+  """Return a converter that replace any value with given one."""
+  return convertible::Convertible -> begin
+    if convertible.error !== nothing
+      return convertible
+    end
+    return Convertible(value, convertible.context)
   end
 end
 
