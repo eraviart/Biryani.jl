@@ -28,12 +28,12 @@ using Converters
 
 
 # call
-@test Convertible("42") |> call(int) |> check == 42
-@test Convertible([3, 2, 1]) |> call(sort) |> check == [1, 2, 3]
-@test Convertible(42) |> call(value -> value + 1) |> check == 43
-@test Convertible(nothing) |> call(value -> value + 1) |> check === nothing
-@test_throws MethodError Convertible("hello world") |> call(value -> value + 1) |> check
-@test_throws MethodError Convertible(nothing) |> call(value -> value + 1, handle_nothing = true) |> check
+@test Convertible("42") |> call(int) |> to_value == 42
+@test Convertible([3, 2, 1]) |> call(sort) |> to_value == [1, 2, 3]
+@test Convertible(42) |> call(value -> value + 1) |> to_value == 43
+@test Convertible(nothing) |> call(value -> value + 1) |> to_value === nothing
+@test_throws MethodError Convertible("hello world") |> call(value -> value + 1) |> to_value
+@test_throws MethodError Convertible(nothing) |> call(value -> value + 1, handle_nothing = true) |> to_value
 
 # condition
 # detect_unknown_values = condition(
@@ -44,62 +44,76 @@ using Converters
 # @test detect_unknown_values("Hello world!") === true
 # @test detect_unknown_values("?") === false
 
+# default
+@test Convertible(nothing) |> default(42) |> to_value == 42
+@test Convertible("Hello world!") |> default(42) |> to_value == "Hello world!"
+@test Convertible("    \n  ") |> input_to_int |> default(42) |> to_value == 42
+@test Convertible(nothing) |> input_to_int |> default(42) |> to_value == 42
+
 # empty_to_nothing
-@test Convertible("") |> empty_to_nothing |> check === nothing
-@test Convertible("Hello world!") |> empty_to_nothing |> check == "Hello world!"
-@test Convertible(" ") |> empty_to_nothing |> check == " "
-@test Convertible(" ") |> strip |> empty_to_nothing |> check === nothing
-@test Convertible([]) |> empty_to_nothing |> check === nothing
-@test Convertible([42, 43]) |> empty_to_nothing |> check == [42, 43]
-@test Convertible({}) |> empty_to_nothing |> check === nothing
-@test Convertible(["answer" => 42]) |> empty_to_nothing |> check == ["answer" => 42]
-@test Convertible(nothing) |> empty_to_nothing |> check === nothing
+@test Convertible("") |> empty_to_nothing |> to_value === nothing
+@test Convertible("Hello world!") |> empty_to_nothing |> to_value == "Hello world!"
+@test Convertible(" ") |> empty_to_nothing |> to_value == " "
+@test Convertible(" ") |> strip |> empty_to_nothing |> to_value === nothing
+@test Convertible([]) |> empty_to_nothing |> to_value === nothing
+@test Convertible([42, 43]) |> empty_to_nothing |> to_value == [42, 43]
+@test Convertible({}) |> empty_to_nothing |> to_value === nothing
+@test Convertible(["answer" => 42]) |> empty_to_nothing |> to_value == ["answer" => 42]
+@test Convertible(nothing) |> empty_to_nothing |> to_value === nothing
 
 # extract_when_singleton
-@test Convertible([42]) |> extract_when_singleton |> check == 42
-@test Convertible([42, 43]) |> extract_when_singleton |> check == [42, 43]
-@test Convertible([]) |> extract_when_singleton |> check == []
-@test Convertible(nothing) |> extract_when_singleton |> check === nothing
+@test Convertible([42]) |> extract_when_singleton |> to_value == 42
+@test Convertible([42, 43]) |> extract_when_singleton |> to_value == [42, 43]
+@test Convertible([]) |> extract_when_singleton |> to_value == []
+@test Convertible(nothing) |> extract_when_singleton |> to_value === nothing
 
 # fail
-@test Convertible(42) |> fail() |> value_error_couple == (42, "An error occured.")
-@test Convertible(42) |> fail(error = "Wrong answer.") |> value_error_couple == (42, "Wrong answer.")
-@test Convertible(nothing) |> fail() |> value_error_couple == (nothing, "An error occured.")
+@test Convertible(42) |> fail() |> to_value_error == (42, "An error occured.")
+@test Convertible(42) |> fail(error = "Wrong answer.") |> to_value_error == (42, "Wrong answer.")
+@test Convertible(nothing) |> fail() |> to_value_error == (nothing, "An error occured.")
 
 # input_to_email
-@test Convertible("john@doe.name") |> input_to_email |> check == "john@doe.name"
-@test Convertible("mailto:john@doe.name") |> input_to_email |> check == "john@doe.name"
-@test Convertible("root@localhost") |> input_to_email |> check == "root@localhost"
-@test Convertible("root@127.0.0.1") |> input_to_email |> value_error_couple == ("root@127.0.0.1",
+@test Convertible("john@doe.name") |> input_to_email |> to_value == "john@doe.name"
+@test Convertible("mailto:john@doe.name") |> input_to_email |> to_value == "john@doe.name"
+@test Convertible("root@localhost") |> input_to_email |> to_value == "root@localhost"
+@test Convertible("root@127.0.0.1") |> input_to_email |> to_value_error == ("root@127.0.0.1",
   "Invalid domain name.")
-@test Convertible("root") |> input_to_email |> value_error_couple == ("root",
+@test Convertible("root") |> input_to_email |> to_value_error == ("root",
   """An email must contain exactly one "@".""")
-@test Convertible("    john@doe.name\n  ") |> input_to_email |> check == "john@doe.name"
-@test Convertible(nothing) |> input_to_email |> check === nothing
-@test Convertible("    \n  ") |> input_to_email |> check === nothing
+@test Convertible("    john@doe.name\n  ") |> input_to_email |> to_value == "john@doe.name"
+@test Convertible(nothing) |> input_to_email |> to_value === nothing
+@test Convertible("    \n  ") |> input_to_email |> to_value === nothing
 
 # input_to_int
-@test Convertible("42") |> input_to_int |> check == 42
-@test Convertible("   42\n") |> input_to_int |> check == 42
-@test Convertible("42.75") |> input_to_int |> value_error_couple == ("42.75", "Value must be an integer.")
-@test Convertible("42,75") |> input_to_int |> value_error_couple == ("42,75", "Value must be an integer.")
-@test Convertible(nothing) |> input_to_int |> check === nothing
+@test Convertible("42") |> input_to_int |> to_value == 42
+@test Convertible("   42\n") |> input_to_int |> to_value == 42
+@test Convertible("42.75") |> input_to_int |> to_value_error == ("42.75", "Value must be an integer.")
+@test Convertible("42,75") |> input_to_int |> to_value_error == ("42,75", "Value must be an integer.")
+@test Convertible(nothing) |> input_to_int |> to_value === nothing
 
 # item_or_sequence
-@test Convertible("42") |> item_or_sequence(input_to_int) |> check == 42
-@test Convertible(["42"]) |> item_or_sequence(input_to_int) |> check == 42
-@test Convertible(["42", "43"]) |> item_or_sequence(input_to_int) |> check == [42, 43]
-@test Convertible(["42", "43", "Hello world!"]) |> item_or_sequence(input_to_int) |> value_error_couple == (
+@test Convertible("42") |> item_or_sequence(input_to_int) |> to_value == 42
+@test Convertible(["42"]) |> item_or_sequence(input_to_int) |> to_value == 42
+@test Convertible(["42", "43"]) |> item_or_sequence(input_to_int) |> to_value == [42, 43]
+@test Convertible(["42", "43", "Hello world!"]) |> item_or_sequence(input_to_int) |> to_value_error == (
   [42, 43, "Hello world!"], [3 => "Value must be an integer."])
-@test Convertible(nothing) |> item_or_sequence(input_to_int) |> check === nothing
-@test Convertible([nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> check == []
-@test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int) |> check == [nothing, nothing]
-@test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> check == []
-@test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int) |> check == [42, nothing, 43]
-@test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int, drop_nothing = true) |> check == [42, 43]
+@test Convertible(nothing) |> item_or_sequence(input_to_int) |> to_value === nothing
+@test Convertible([nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> to_value == []
+@test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int) |> to_value == [nothing, nothing]
+@test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> to_value == []
+@test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int) |> to_value == [42, nothing, 43]
+@test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int, drop_nothing = true) |> to_value == [42,
+  43]
+
+# make_item_to_singleton
+@test Convertible("Hello world!") |> make_item_to_singleton() |> to_value == ["Hello world!"]
+@test Convertible(["Hello world!"]) |> make_item_to_singleton() |> to_value == ["Hello world!"]
+@test Convertible([42, "Hello world!"]) |> make_item_to_singleton() |> to_value == [42, "Hello world!"]
+@test Convertible([]) |> make_item_to_singleton() |> to_value == []
+@test Convertible(nothing) |> make_item_to_singleton() |> to_value == nothing
 
 # pipe
-@test Convertible(42) |> pipe() |> check == 42
+@test Convertible(42) |> pipe() |> to_value == 42
 # >>> input_to_bool(42)
 # Traceback (most recent call last):
 # AttributeError:
@@ -114,15 +128,15 @@ using Converters
 # (42, None)
 
 # require
-@test Convertible(42) |> require |> check == 42
-@test Convertible("") |> require |> check == ""
-@test Convertible(nothing) |> require |> value_error_couple == (nothing, "Missing value.")
-@test Convertible("   \n  ") |> strip |> require |> value_error_couple == (nothing, "Missing value.")
+@test Convertible(42) |> require |> to_value == 42
+@test Convertible("") |> require |> to_value == ""
+@test Convertible(nothing) |> require |> to_value_error == (nothing, "Missing value.")
+@test Convertible("   \n  ") |> strip |> require |> to_value_error == (nothing, "Missing value.")
 
 # strip
-@test Convertible("   Hello world!\n   ") |> strip |> check == "Hello world!"
-@test Convertible("   \n   ") |> strip |> check === nothing
-@test Convertible(nothing) |> strip |> check === nothing
+@test Convertible("   Hello world!\n   ") |> strip |> to_value == "Hello world!"
+@test Convertible("   \n   ") |> strip |> to_value === nothing
+@test Convertible(nothing) |> strip |> to_value === nothing
 
 # struct
 dict_strict_converter = struct(
@@ -136,7 +150,7 @@ dict_strict_converter = struct(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
-]) |> dict_strict_converter |> check == [
+]) |> dict_strict_converter |> to_value == [
   "name" => "John Doe",
   "age" => 72,
   "email" => "john@doe.name",
@@ -144,7 +158,7 @@ dict_strict_converter = struct(
 @test Convertible([
   "name" => "John Doe",
   "email" => "john@doe.name",
-]) |> dict_strict_converter |> check == [
+]) |> dict_strict_converter |> to_value == [
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
@@ -153,7 +167,7 @@ dict_strict_converter = struct(
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
-]) |> dict_strict_converter |> check == [
+]) |> dict_strict_converter |> to_value == [
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
@@ -163,7 +177,7 @@ dict_strict_converter = struct(
   "age" => "72",
   "email" => "john@doe.name",
   "phone" => "   +33 9 12 34 56 78   ",
-]) |> dict_strict_converter |> value_error_couple == (
+]) |> dict_strict_converter |> to_value_error == (
   [
     "name" => "John Doe",
     "age" => 72,
@@ -186,7 +200,7 @@ dict_non_strict_converter = struct(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
-]) |> dict_non_strict_converter |> check == [
+]) |> dict_non_strict_converter |> to_value == [
   "name" => "John Doe",
   "age" => 72,
   "email" => "john@doe.name",
@@ -194,7 +208,7 @@ dict_non_strict_converter = struct(
 @test Convertible([
   "name" => "John Doe",
   "email" => "john@doe.name",
-]) |> dict_non_strict_converter |> check == [
+]) |> dict_non_strict_converter |> to_value == [
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
@@ -204,7 +218,7 @@ dict_non_strict_converter = struct(
   "age" => "72",
   "email" => "john@doe.name",
   "phone" => "   +33 9 12 34 56 78   ",
-]) |> dict_non_strict_converter |> check == [
+]) |> dict_non_strict_converter |> to_value == [
   "name" => "John Doe",
   "age" => 72,
   "email" => "john@doe.name",
@@ -221,7 +235,7 @@ tuple_strict_converter = struct(
   "John Doe",
   "72",
   "john@doe.name",
-]) |> tuple_strict_converter |> check == (
+]) |> tuple_strict_converter |> to_value == (
   "John Doe",
   72,
   "john@doe.name",
@@ -230,7 +244,7 @@ tuple_strict_converter = struct(
   "John Doe",
   nothing,
   "john@doe.name",
-]) |> tuple_strict_converter |> check == (
+]) |> tuple_strict_converter |> to_value == (
   "John Doe",
   nothing,
   "john@doe.name",
@@ -240,7 +254,7 @@ tuple_strict_converter = struct(
   "72",
   "john@doe.name",
   "   +33 9 12 34 56 78   ",
-]) |> tuple_strict_converter |> value_error_couple == (
+]) |> tuple_strict_converter |> to_value_error == (
   (
     "John Doe",
     72,
@@ -263,7 +277,7 @@ tuple_non_strict_converter = struct(
   "John Doe",
   "72",
   "john@doe.name",
-]) |> tuple_non_strict_converter |> check == (
+]) |> tuple_non_strict_converter |> to_value == (
   "John Doe",
   72,
   "john@doe.name",
@@ -272,7 +286,7 @@ tuple_non_strict_converter = struct(
   "John Doe",
   nothing,
   "john@doe.name",
-]) |> tuple_non_strict_converter |> check == (
+]) |> tuple_non_strict_converter |> to_value == (
   "John Doe",
   nothing,
   "john@doe.name",
@@ -282,7 +296,7 @@ tuple_non_strict_converter = struct(
   "72",
   "john@doe.name",
   "   +33 9 12 34 56 78   ",
-]) |> tuple_non_strict_converter |> check == (
+]) |> tuple_non_strict_converter |> to_value == (
   "John Doe",
   72,
   "john@doe.name",
@@ -290,50 +304,60 @@ tuple_non_strict_converter = struct(
 )
 
 # test
-@test Convertible("hello") |> test(value -> isa(value, String)) |> check == "hello"
-@test Convertible(1) |> test(value -> isa(value, String)) |> value_error_couple == (1, "Test failed.")
-@test Convertible(1) |> test(value -> isa(value, String), error = "Value is not a string.") |> value_error_couple == (1,
+@test Convertible("hello") |> test(value -> isa(value, String)) |> to_value == "hello"
+@test Convertible(1) |> test(value -> isa(value, String)) |> to_value_error == (1, "Test failed.")
+@test Convertible(1) |> test(value -> isa(value, String), error = "Value is not a string.") |> to_value_error == (1,
   "Value is not a string.")
 
 # test_between
-@test Convertible(5) |> test_between(0, 9) |> check == 5
-@test Convertible(0) |> test_between(0, 9) |> check == 0
-@test Convertible(10) |> test_between(0, 9) |> value_error_couple == (10, "Value must be between 0 and 9.")
-@test Convertible(10) |> test_between(0, 9, error = "Number must be a digit.") |> value_error_couple == (10,
+@test Convertible(5) |> test_between(0, 9) |> to_value == 5
+@test Convertible(0) |> test_between(0, 9) |> to_value == 0
+@test Convertible(10) |> test_between(0, 9) |> to_value_error == (10, "Value must be between 0 and 9.")
+@test Convertible(10) |> test_between(0, 9, error = "Number must be a digit.") |> to_value_error == (10,
   "Number must be a digit.")
-@test Convertible(nothing) |> test_between(0, 9) |> check === nothing
+@test Convertible(nothing) |> test_between(0, 9) |> to_value === nothing
 
 # test_greater_or_equal
-@test Convertible(5) |> test_greater_or_equal(0) |> check == 5
-@test Convertible(5) |> test_greater_or_equal(9) |> value_error_couple == (5,
+@test Convertible(5) |> test_greater_or_equal(0) |> to_value == 5
+@test Convertible(5) |> test_greater_or_equal(9) |> to_value_error == (5,
   "Value must be greater than or equal to 9.")
 @test Convertible(5) |> test_greater_or_equal(9, error = "Value must be a positive two-digits number.") |>
-  value_error_couple == (5, "Value must be a positive two-digits number.")
-@test Convertible(nothing) |> test_greater_or_equal(0) |> check === nothing
+  to_value_error == (5, "Value must be a positive two-digits number.")
+@test Convertible(nothing) |> test_greater_or_equal(0) |> to_value === nothing
+
+# test_in
+@test Convertible('a') |> test_in("abcd") |> to_value == 'a'
+@test Convertible('a') |> test_in(['a', 'b', 'c', 'd']) |> to_value == 'a'
+@test Convertible('z') |> test_in(['a', 'b', 'c', 'd']) |> to_value_error == ('z',
+  "Value must belong to Char[a,b,c,d].")
+@test Convertible('z') |> test_in(['a', 'b', 'c', 'd'], error = """Value must be a letter less than "e".""") |>
+  to_value_error == ('z', """Value must be a letter less than "e".""")
+@test Convertible('z') |> test_in([]) |> to_value_error == ('z', "Value must belong to None[].")
+@test_throws MethodError Convertible('z') |> test_in(nothing)
 
 # test_isa
-@test Convertible("This is a string.") |> test_isa(String) |> check == "This is a string."
-@test Convertible(42) |> test_isa(String) |> value_error_couple == (42, "Value must be an instance of String.")
-@test Convertible(42) |> test_isa(String, error = "Value is not a string.") |> value_error_couple == (42,
+@test Convertible("This is a string.") |> test_isa(String) |> to_value == "This is a string."
+@test Convertible(42) |> test_isa(String) |> to_value_error == (42, "Value must be an instance of String.")
+@test Convertible(42) |> test_isa(String, error = "Value is not a string.") |> to_value_error == (42,
   "Value is not a string.")
-@test Convertible(nothing) |> test_isa(String) |> check === nothing
+@test Convertible(nothing) |> test_isa(String) |> to_value === nothing
 
 # to_int
-@test Convertible(42) |> to_int |> check == 42
-@test Convertible("42") |> to_int |> check == 42
-@test Convertible("42.75") |> to_int |> value_error_couple == ("42.75", "Value must be an integer.")
-@test Convertible("42,75") |> to_int |> value_error_couple == ("42,75", "Value must be an integer.")
-@test Convertible(nothing) |> to_int |> check === nothing
+@test Convertible(42) |> to_int |> to_value == 42
+@test Convertible("42") |> to_int |> to_value == 42
+@test Convertible("42.75") |> to_int |> to_value_error == ("42.75", "Value must be an integer.")
+@test Convertible("42,75") |> to_int |> to_value_error == ("42,75", "Value must be an integer.")
+@test Convertible(nothing) |> to_int |> to_value === nothing
 
 # uniform_sequence
-@test Convertible(["42"]) |> uniform_sequence(input_to_int) |> check == [42]
-@test Convertible(["42", "43"]) |> uniform_sequence(input_to_int) |> check == [42, 43]
-@test Convertible(["42", "43", "Hello world!"]) |> uniform_sequence(input_to_int) |> value_error_couple == (
+@test Convertible(["42"]) |> uniform_sequence(input_to_int) |> to_value == [42]
+@test Convertible(["42", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, 43]
+@test Convertible(["42", "43", "Hello world!"]) |> uniform_sequence(input_to_int) |> to_value_error == (
   [42, 43, "Hello world!"], [3 => "Value must be an integer."])
-@test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int) |> check == [nothing, nothing]
-@test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int, drop_nothing = true) |> check == []
-@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int) |> check == [42, nothing, 43]
-@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int, drop_nothing = true) |> check == [42, 43]
+@test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int) |> to_value == [nothing, nothing]
+@test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == []
+@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, nothing, 43]
+@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == [42, 43]
 
 
 # Test tools.
@@ -343,12 +367,12 @@ tuple_non_strict_converter = struct(
 @test (Convertible("42") |> input_to_int).value == 42
 @test (Convertible("Hello world!") |> input_to_int).value == "Hello world!"
 
-# check
-@test Convertible("42") |> input_to_int |> check == 42
-@test_throws ErrorException Convertible("Hello world!") |> input_to_int |> check
-# @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> check === true
+# to_value
+@test Convertible("42") |> input_to_int |> to_value == 42
+@test_throws ErrorException Convertible("Hello world!") |> input_to_int |> to_value
+# @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> to_value === true
 
-# value_error_couple
-@test Convertible("42") |> input_to_int |> value_error_couple == (42, nothing)
-@test Convertible("Hello world!") |> input_to_int |> value_error_couple == ("Hello world!", "Value must be an integer.")
-# @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> value_error_couple === (true, nothing)
+# to_value_error
+@test Convertible("42") |> input_to_int |> to_value_error == (42, nothing)
+@test Convertible("Hello world!") |> input_to_int |> to_value_error == ("Hello world!", "Value must be an integer.")
+# @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> to_value_error === (true, nothing)

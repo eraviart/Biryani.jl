@@ -22,7 +22,7 @@
 module Converters
 
 
-export call, check, condition, Convertible, empty_to_nothing, extract_when_singleton, fail, input_to_email, input_to_int, item_or_sequence, pipe, require, string_to_email, strip, struct, test_between, test_greater_or_equal, test, test_isa, to_int, uniform_sequence, value_error_couple
+export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, input_to_email, input_to_int, item_or_sequence, make_item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_int, to_value, to_value_error, uniform_sequence
 
 
 import Base: strip
@@ -79,15 +79,6 @@ function call(func::Function; handle_nothing = false)
 end
 
 
-function check(convertible::Convertible)
-  """Check a conversion and either return its value or raise an *ErrorException* exception."""
-  if convertible.error !== nothing
-    error(eval_error(convertible.context, convertible.error))
-  end
-  return convertible.value
-end
-
-
 function condition(test_converter, ok_converter, error_converter = nothing)
   """When test_converter* succeeds (ie no error), then apply *ok_converter*, otherwise apply *error_converter*.
 
@@ -98,6 +89,20 @@ function condition(test_converter, ok_converter, error_converter = nothing)
     return converted.error === nothing ?
       ok_converter(convertible) :
       error_converter === nothing ? convertible : error_converter(convertible)
+  end
+end
+
+
+function default(value)
+  """Return a converter that replace a ``nothing`` value by given one.
+
+  .. note:: See converter :func:`set_value` to replace a non-``default`` value.
+  """
+  return convertible::Convertible -> begin
+    if convertible.error !== nothing || convertible.value !== nothing
+      return convertible
+    end
+    return Convertible(value, convertible.context)
   end
 end
 
@@ -165,6 +170,21 @@ function item_or_sequence(converters::Function...; drop_nothing = false, item_ty
     pipe(converters...),
   )(convertible)
 end
+
+
+function make_item_to_singleton(; sequence_type = Array):
+  """Convert an item to a singleton, but keep a sequence of items unchanged."""
+  return convertible::Convertible -> begin
+    if convertible.error !== nothing || convertible.value === nothing || isa(convertible.value, sequence_type)
+      return convertible
+    end
+    # TODO: Use sequence_type to build result value.
+    return Convertible([convertible.value], convertible.context)
+  end
+end
+
+
+noop(convertible::Convertible) = convertible
 
 
 function pipe(converters::Function...)
@@ -329,6 +349,21 @@ function test_greater_or_equal(min_value; error = nothing)
 end
 
 
+function test_in(values; error = nothing)
+  """Return a converter that accepts only values belonging to a given set (or array or...).
+
+  .. warning:: Like most converters, a ``nothing`` value is not compared.
+  """
+  return test(
+    value -> value in values,
+    error = error === nothing ? context -> _(
+      context,
+      string("Value must belong to ", length(values) > 5 ? string(values[1:5], "...") : values, "."),
+    ) : error,
+  )
+end
+
+
 function test_isa(data_type::DataType; error = nothing)
   """Return a converter that accepts only an instance of given type."""
   return test(
@@ -366,6 +401,18 @@ function to_int(value::String, context::Context)
 end
 
 
+function to_value(convertible::Convertible)
+  """Check a conversion and either return its value or raise an *ErrorException* exception."""
+  if convertible.error !== nothing
+    error(eval_error(convertible.context, convertible.error))
+  end
+  return convertible.value
+end
+
+
+to_value_error(convertible::Convertible) = (convertible.value, eval_error(convertible.context, convertible.error))
+
+
 function uniform_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
   """Return a converter that applies the same converter to each value of an array."""
   # TODO: Handle sequence_type (Array, Tuple...)
@@ -391,9 +438,6 @@ function uniform_sequence(converters::Function...; drop_nothing = false, item_ty
     )
   end
 end
-
-
-value_error_couple(convertible::Convertible) = (convertible.value, eval_error(convertible.context, convertible.error))
 
 
 # TODO: rename input_to_int to parseint. Same thing for input_to_float.
