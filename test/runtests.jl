@@ -130,19 +130,12 @@ detect_unknown_values = condition(
 @test Convertible(nothing) |> item_to_singleton |> to_value == nothing
 
 # pipe
+@test_throws MethodError Convertible(42) |> input_to_bool
+@test_throws MethodError Convertible(42) |> pipe(input_to_bool)
+@test Convertible(42) |> pipe(test_isa(String), input_to_bool) |> to_value_error == (42,
+  "Value must be an instance of String.")
+@test Convertible(42) |> pipe(to_string, input_to_bool) |> to_value === true
 @test Convertible(42) |> pipe() |> to_value == 42
-# >>> input_to_bool(42)
-# Traceback (most recent call last):
-# AttributeError:
-# >>> pipe(input_to_bool)(42)
-# Traceback (most recent call last):
-# AttributeError:
-# >>> pipe(test_isinstance(unicode), input_to_bool)(42)
-# (42, u"Value is not an instance of <type 'unicode'>")
-# >>> pipe(anything_to_str, test_isinstance(unicode), input_to_bool)(42)
-# (True, None)
-# >>> pipe()(42)
-# (42, None)
 
 # require
 @test Convertible(42) |> require |> to_value == 42
@@ -374,6 +367,11 @@ tuple_non_strict_converter = struct(
 @test Convertible("42.75") |> to_int |> to_value_error == ("42.75", "Value must be an integer.")
 @test Convertible("42,75") |> to_int |> to_value_error == ("42,75", "Value must be an integer.")
 @test Convertible(nothing) |> to_int |> to_value === nothing
+
+# to_string
+@test Convertible(42) |> to_string |> to_value == "42"
+@test Convertible("42") |> to_string |> to_value == "42"
+@test Convertible(nothing) |> to_string |> to_value === nothing
 
 # uniform_sequence
 @test Convertible(["42"]) |> uniform_sequence(input_to_int) |> to_value == [42]

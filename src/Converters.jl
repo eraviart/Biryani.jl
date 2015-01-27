@@ -22,7 +22,7 @@
 module Converters
 
 
-export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_value, to_value_error, uniform_sequence
+export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_string, to_value, to_value_error, uniform_sequence
 
 
 import Base: strip
@@ -146,7 +146,6 @@ function fail(convertible::Convertible; error = nothing)
     error === nothing ? N_("An error occured.") : error,
   )
 end
-
 
 fail(error::String) = convertible::Convertible -> fail(convertible, error = error)
 
@@ -455,6 +454,18 @@ function to_int(value::String, context::Context)
   catch
     return Convertible(value, context, N_("Value must be an integer."))
   end
+end
+
+
+function to_string(convertible::Convertible)
+  """Convert a Julia data to unicode.
+
+  .. warning:: Like most converters, a ``nothing`` value is not converted.
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  return Convertible(string(convertible.value), convertible.context)
 end
 
 
