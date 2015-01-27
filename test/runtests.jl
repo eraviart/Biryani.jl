@@ -68,15 +68,15 @@ detect_unknown_values = condition(
 @test Convertible(nothing) |> extract_when_singleton |> to_value === nothing
 
 # fail
-@test Convertible(42) |> fail() |> to_value_error == (42, "An error occured.")
-@test Convertible(42) |> fail(error = "Wrong answer.") |> to_value_error == (42, "Wrong answer.")
-@test Convertible(nothing) |> fail() |> to_value_error == (nothing, "An error occured.")
+@test Convertible(42) |> fail |> to_value_error == (42, "An error occured.")
+@test Convertible(42) |> fail("Wrong answer.") |> to_value_error == (42, "Wrong answer.")
+@test Convertible(nothing) |> fail |> to_value_error == (nothing, "An error occured.")
 
 # from_value
 @test Convertible("Answer to the Ultimate Question of Life, the Universe, and Everything") |> from_value(42) |>
   to_value == 42
 @test Convertible(nothing) |> from_value(42) |> to_value == 42
-@test Convertible("Hello world!") |> fail() |> from_value(42) |> to_value_error == ("Hello world!", "An error occured.")
+@test Convertible("Hello world!") |> fail |> from_value(42) |> to_value_error == ("Hello world!", "An error occured.")
 
 # input_to_bool
 @test Convertible("0") |> input_to_bool |> to_value === false
@@ -122,12 +122,12 @@ detect_unknown_values = condition(
 @test Convertible(["42", "    \n  ", "43"]) |> item_or_sequence(input_to_int, drop_nothing = true) |> to_value == [42,
   43]
 
-# make_item_to_singleton
-@test Convertible("Hello world!") |> make_item_to_singleton() |> to_value == ["Hello world!"]
-@test Convertible(["Hello world!"]) |> make_item_to_singleton() |> to_value == ["Hello world!"]
-@test Convertible([42, "Hello world!"]) |> make_item_to_singleton() |> to_value == [42, "Hello world!"]
-@test Convertible([]) |> make_item_to_singleton() |> to_value == []
-@test Convertible(nothing) |> make_item_to_singleton() |> to_value == nothing
+# item_to_singleton
+@test Convertible("Hello world!") |> item_to_singleton |> to_value == ["Hello world!"]
+@test Convertible(["Hello world!"]) |> item_to_singleton |> to_value == ["Hello world!"]
+@test Convertible([42, "Hello world!"]) |> item_to_singleton |> to_value == [42, "Hello world!"]
+@test Convertible([]) |> item_to_singleton |> to_value == []
+@test Convertible(nothing) |> item_to_singleton |> to_value == nothing
 
 # pipe
 @test Convertible(42) |> pipe() |> to_value == 42

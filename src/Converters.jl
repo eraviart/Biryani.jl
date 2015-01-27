@@ -22,7 +22,7 @@
 module Converters
 
 
-export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, make_item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_value, to_value_error, uniform_sequence
+export call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_value, to_value_error, uniform_sequence
 
 
 import Base: strip
@@ -135,19 +135,20 @@ extract_when_singleton(convertible::Convertible) = condition(
 """Extract first item of sequence when it is a singleton, otherwise keep it unchanged."""
 
 
-function fail(; error = nothing)
-  """Return a converter that always returns an error."""
-  return convertible::Convertible -> begin
-    if convertible.error !== nothing
-      return convertible
-    end
-    return Convertible(
-      convertible.value,
-      convertible.context,
-      error === nothing ? N_("An error occured.") : error,
-    )
+function fail(convertible::Convertible; error = nothing)
+  """Always return an error."""
+  if convertible.error !== nothing
+    return convertible
   end
+  return Convertible(
+    convertible.value,
+    convertible.context,
+    error === nothing ? N_("An error occured.") : error,
+  )
 end
+
+
+fail(error::String) = convertible::Convertible -> fail(convertible, error = error)
 
 
 function from_value(value)
@@ -194,15 +195,13 @@ function item_or_sequence(converters::Function...; drop_nothing = false, item_ty
 end
 
 
-function make_item_to_singleton(; sequence_type = Array):
+function item_to_singleton(convertible::Convertible; sequence_type = Array):
   """Convert an item to a singleton, but keep a sequence of items unchanged."""
-  return convertible::Convertible -> begin
-    if convertible.error !== nothing || convertible.value === nothing || isa(convertible.value, sequence_type)
-      return convertible
-    end
-    # TODO: Use sequence_type to build result value.
-    return Convertible([convertible.value], convertible.context)
+  if convertible.error !== nothing || convertible.value === nothing || isa(convertible.value, sequence_type)
+    return convertible
   end
+  # TODO: Use sequence_type to build result value.
+  return Convertible([convertible.value], convertible.context)
 end
 
 
@@ -270,7 +269,7 @@ function struct(converters::Dict; default = nothing)
       converter_by_key = copy(converters)
       for key in keys(convertible.value)
         if !haskey(converter_by_key, key)
-          converter_by_key[key] = default === nothing ? fail(error = N_("Unexpected item.")) : default
+          converter_by_key[key] = default === nothing ? fail(N_("Unexpected item.")) : default
         end
       end
     end
@@ -302,7 +301,7 @@ function struct(converters::Tuple; default = nothing)
       while length(values) > length(values_converter)
         values_converter = tuple(
           values_converter...,
-          default === nothing ? fail(error = N_("Unexpected item.")) : default,
+          default === nothing ? fail(N_("Unexpected item.")) : default,
         )
       end
     end
