@@ -406,7 +406,7 @@ function test_in(values; error = nothing)
 end
 
 
-function test_isa(data_type::DataType; error = nothing)
+function test_isa(data_type::Union(DataType, UnionType); error = nothing)
   """Return a converter that accepts only an instance of given type."""
   return test(
     value -> isa(value, data_type),
