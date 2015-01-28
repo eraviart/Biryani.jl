@@ -488,14 +488,6 @@ function to_int(convertible::Convertible)
   return to_int(convertible.value, convertible.context)
 end
 
-function to_int(value, context::Context)
-  try
-    return Convertible(convert(Int, value), context)
-  catch
-    return Convertible(value, context, N_("Value must be an integer."))
-  end
-end
-
 function to_int(value::String, context::Context)
   try
     return Convertible(int(value), context)
@@ -504,9 +496,17 @@ function to_int(value::String, context::Context)
   end
 end
 
+function to_int(value, context::Context)
+  try
+    return Convertible(convert(Int, value), context)
+  catch
+    return Convertible(value, context, N_("Value must be an integer."))
+  end
+end
+
 
 function to_string(convertible::Convertible)
-  """Convert a Julia data to unicode.
+  """Convert a Julia data to a string.
 
   .. warning:: Like most converters, a ``nothing`` value is not converted.
   """
