@@ -22,10 +22,12 @@
 module Converters
 
 
-export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_int, to_string, to_value, to_value_error, uniform_sequence
+export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_int, to_string, to_value, to_value_error, uniform_sequence
 
 
 import Base: strip
+
+using Dates
 
 
 abstract Context
@@ -202,6 +204,26 @@ function item_to_singleton(convertible::Convertible; sequence_type = Array):
   # TODO: Use sequence_type to build result value.
   return Convertible([convertible.value], convertible.context)
 end
+
+
+function log_info(convertible::Convertible, messages...)
+  """Display value using "info" function."""
+  info([string(message) for message in messages]..., "value: ", string(convertible.value), ", type: ",
+    string(typeof(convertible.value)), ", error: ", string(convertible.error))
+  return convertible
+end
+
+log_info(messages...) = convertible::Convertible -> log_info(convertible, messages...)
+
+
+function log_warning(convertible::Convertible, messages...)
+  """Display value using "warn" function."""
+  warn([string(message) for message in messages]..., "value: ", string(convertible.value), ", error: ",
+    string(convertible.error))
+  return convertible
+end
+
+log_warning(messages...) = convertible::Convertible -> log_warning(convertible, messages...)
 
 
 noop(convertible::Convertible) = convertible
@@ -427,6 +449,32 @@ function to_bool(value::String, context::Context)
     return Convertible(value, context, N_("Value must be a boolean."))
   end
 end
+
+
+function to_date(convertible::Convertible)
+  """Convert a Julia data to a date.
+
+  .. warning:: Like most converters, a ``nothing`` value is not converted.
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  return to_date(convertible.value, convertible.context)
+  # return Convertible(Date(convertible.value), convertible.context)
+end
+
+to_date(value::(Int...), context::Context) = Convertible(Date(value...), context)
+
+function to_date(value::String, context::Context)
+  if !('-' in value)
+    # Work around bug in Julia 0.3: Date("2013") throws:
+    # ERROR: ArgumentError("Delimiter mismatch. Couldn't find first delimiter, \"-\", in date string")
+    value = string(value, "-1")
+  end
+  return Convertible(Date(value), context)
+end
+
+to_date(value, context::Context) = Convertible(Date(value), context)
 
 
 function to_int(convertible::Convertible)
