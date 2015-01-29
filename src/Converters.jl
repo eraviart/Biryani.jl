@@ -536,7 +536,7 @@ end
 function to_value(convertible::Convertible)
   """Check a conversion and either return its value or raise an *ErrorException* exception."""
   if convertible.error !== nothing
-    error(eval_error(convertible.context, convertible.error))
+    error(eval_error(convertible.context, convertible.error), "\nValue: ", convertible.value)
   end
   return convertible.value
 end
