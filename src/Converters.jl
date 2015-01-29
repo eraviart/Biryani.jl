@@ -22,12 +22,13 @@
 module Converters
 
 
-export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_int, to_string, to_value, to_value_error, uniform_sequence
+export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
 
 
 import Base: strip
 
 using Dates
+import DataStructures: OrderedDict
 
 
 abstract Context
@@ -138,6 +139,14 @@ eval_error(context::Context, error_by_key::Dict) = [
   key => eval_error(context, value)
   for (key, value) in error_by_key
 ]
+
+function eval_error(context::Context, error_by_key::OrderedDict)
+  evaluated_error_by_key = similar(error_by_key)
+  for (key, value) in error_by_key
+    evaluated_error_by_key[key] = eval_error(context, value)
+  end
+  return evaluated_error_by_key
+end
 
 eval_error(context::Context, func::Function) = func(context)
 
@@ -564,14 +573,65 @@ end
 to_value_error(convertible::Convertible) = (convertible.value, eval_error(convertible.context, convertible.error))
 
 
-function uniform_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
-  """Return a converter that applies the same converter to each value of an array."""
-  # TODO: Handle sequence_type (Array, Tuple...)
+function uniform_mapping(key_converter::Function, value_converters::Function...; drop_nothing = false,
+    drop_nothing_keys = false, key_type = nothing, value_type = nothing)
+  """Return a converter that applies a unique converter to each key and another one to each value of a mapping."""
+  # TODO: Handle constructor.
   return convertible::Convertible -> begin
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
-    errors = (Int => Any)[]
+    error_by_key = (Any => Any)[]
+    value_by_key = OrderedDict(Any, Any)
+    for (key, value) in convertible.value
+      key_converted = key_converter(Convertible(key, convertible.context))
+      if key_converted.error !== nothing
+        error_by_key[key] = key_converted.error
+      end
+      if drop_nothing_keys && key_converted.value === nothing
+        continue
+      end
+      value_converted = pipe(value_converters...)(Convertible(value, convertible.context))
+      if !drop_nothing || converted.value !== nothing
+        value_by_key[key_converted.value] = value_converted.value
+      end
+      if value_converted.error !== nothing
+        error_by_key[key_converted.value] = value_converted.error
+      end
+    end
+
+    typed_value_by_key = OrderedDict(
+      key_type === nothing ? mapreduce(typeof, promote_type, Nothing, keys(value_by_key)) : key_type,
+      value_type === nothing ? mapreduce(typeof, promote_type, Nothing, values(value_by_key)) : value_type,
+    )
+    for (key, value) in value_by_key
+      typed_value_by_key[key] = value
+    end
+
+    if isempty(error_by_key)
+      return Convertible(typed_value_by_key, convertible.context)
+    else
+      typed_error_by_key = OrderedDict(
+        key_type === nothing ? mapreduce(typeof, promote_type, Nothing, keys(error_by_key)) : key_type,
+        value_type === nothing ? mapreduce(typeof, promote_type, Nothing, values(error_by_key)) : value_type,
+      )
+      for (key, error) in error_by_key
+        typed_error_by_key[key] = error
+      end
+      return Convertible(typed_value_by_key, convertible.context, typed_error_by_key)
+    end
+  end
+end
+
+
+function uniform_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
+  """Return a converter that applies the same converter to each value of an array."""
+  # TODO: Handle constructor or sequence_type.
+  return convertible::Convertible -> begin
+    if convertible.error !== nothing || convertible.value === nothing
+      return convertible
+    end
+    error_by_index = (Int => Any)[]
     values = Any[]
     for (index, value) in enumerate(convertible.value)
       converted = pipe(converters...)(Convertible(value, convertible.context))
@@ -579,13 +639,13 @@ function uniform_sequence(converters::Function...; drop_nothing = false, item_ty
         push!(values, converted.value)
       end
       if converted.error !== nothing
-        errors[index] = converted.error
+        error_by_index[index] = converted.error
       end
     end
     return Convertible(
       collect(item_type === nothing ? mapreduce(typeof, promote_type, Nothing, values) : item_type, values),
       convertible.context,
-      isempty(errors) ? nothing : errors,
+      isempty(error_by_index) ? nothing : error_by_index,
     )
   end
 end

@@ -373,6 +373,23 @@ tuple_non_strict_converter = struct(
 @test Convertible("42") |> to_string |> to_value == "42"
 @test Convertible(nothing) |> to_string |> to_value === nothing
 
+# uniform_mapping
+@test Convertible(["a" => "1", "b" => "2"]) |> uniform_mapping(strip, input_to_int) |> to_value == ["a" => 1, "b" => 2]
+@test Convertible(["   answer\n  " => "42"]) |> uniform_mapping(strip, input_to_int) |> to_value == ["answer" => 42]
+@test Convertible(["a" => "1", "b" => "2", "c" => 3]) |> uniform_mapping(strip, test_isa(String), input_to_int) |>
+  to_value_error == (["a" => 1, "b" => 2, "c" => 3], ["c" => "Value must be an instance of String."])
+@test Convertible(["a" => "1", "b" => "2", "c" => 3]) |>
+  uniform_mapping(strip, condition(test_isa(String), input_to_int)) |>
+  to_value == ["a" => 1, "b" => 2, "c" => 3]
+@test Convertible({}) |> uniform_mapping(strip, input_to_int) |> to_value == (Nothing => Nothing)[]
+@test Convertible([nothing => "42"]) |> uniform_mapping(strip, input_to_int) |> to_value == [nothing => 42]
+@test Convertible(["   \n  " => "42"]) |> uniform_mapping(strip, input_to_int) |> to_value == [nothing => 42]
+@test Convertible([nothing => "42"]) |> uniform_mapping(strip, input_to_int, drop_nothing_keys = true) |>
+  to_value == (Nothing => Nothing)[]
+    # >>> uniform_mapping(cleanup_line, input_to_int)(None)
+    # (None, None)
+@test Convertible(nothing) |> uniform_mapping(strip, input_to_int) |> to_value === nothing
+
 # uniform_sequence
 @test Convertible(["42"]) |> uniform_sequence(input_to_int) |> to_value == [42]
 @test Convertible(["42", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, 43]
@@ -381,7 +398,8 @@ tuple_non_strict_converter = struct(
 @test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int) |> to_value == [nothing, nothing]
 @test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == []
 @test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, nothing, 43]
-@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == [42, 43]
+@test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == [42,
+  43]
 
 
 # Test tools.
