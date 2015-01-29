@@ -407,6 +407,25 @@ function test_greater_or_equal(min_value; error = nothing)
 end
 
 
+function test_in(values::Dict; error = nothing)
+  """Return a converter that accepts only values belonging to a given set (or array or...).
+
+  .. warning:: Like most converters, a ``nothing`` value is not compared.
+  """
+  values_key = keys(values)
+  return test(
+    value -> value in values_key,
+    error = error === nothing ? context -> _(
+      context,
+      string(
+        "Value must belong to ",
+        length(values_key) > 5 ? string(collect(values_key)[1:5]..., "...") : values_key,
+        ".",
+      ),
+    ) : error,
+  )
+end
+
 function test_in(values; error = nothing)
   """Return a converter that accepts only values belonging to a given set (or array or...).
 
@@ -416,7 +435,7 @@ function test_in(values; error = nothing)
     value -> value in values,
     error = error === nothing ? context -> _(
       context,
-      string("Value must belong to ", length(values) > 5 ? string(values[1:5], "...") : values, "."),
+      string("Value must belong to ", length(values) > 5 ? string(values[1:5]..., "...") : values, "."),
     ) : error,
   )
 end
