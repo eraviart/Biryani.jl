@@ -81,16 +81,32 @@ function call(func::Function; handle_nothing = false)
 end
 
 
-function condition(test_converter, ok_converter, error_converter = nothing)
-  """When test_converter* succeeds (ie no error), then apply *ok_converter*, otherwise apply *error_converter*.
+function condition(converters...)
+  """When first converter succeeds (ie no error), then apply the second converter, otherwise test the third converter...
+
+  When the number of converters is odd, the last converter is applied when all tests have failed (ie: its is an "else"
+  converter).
 
   .. note:: See also :func:`first_match`.
   """
   return convertible::Convertible -> begin
-    converted = test_converter(convertible)
-    return converted.error === nothing ?
-      ok_converter(convertible) :
-      error_converter === nothing ? convertible : error_converter(convertible)
+    last_index = length(converters)
+    ok = false
+    for (index, converter) in enumerate(converters)
+      if index & 1 == 0
+        if ok
+          return converter(convertible)
+        end
+      elseif index == last_index
+        # Else converter
+        return converter(convertible)
+      elseif converter(convertible).error === nothing
+        # Test converter is OK.
+        ok = true
+      end
+    end
+    # Every test has failed and there is no else clause. Return the input convertible.
+    return convertible
   end
 end
 
