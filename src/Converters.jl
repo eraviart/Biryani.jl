@@ -603,8 +603,12 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
     end
 
     typed_value_by_key = OrderedDict(
-      key_type === nothing ? mapreduce(typeof, promote_type, Nothing, keys(value_by_key)) : key_type,
-      value_type === nothing ? mapreduce(typeof, promote_type, Nothing, values(value_by_key)) : value_type,
+      key_type === nothing ?
+        (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Nothing, keys(value_by_key))) :
+        key_type,
+      value_type === nothing ?
+        (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Nothing, values(value_by_key))) :
+        value_type,
     )
     for (key, value) in value_by_key
       typed_value_by_key[key] = value
@@ -645,7 +649,9 @@ function uniform_sequence(converters::Function...; drop_nothing = false, item_ty
       end
     end
     return Convertible(
-      collect(item_type === nothing ? mapreduce(typeof, promote_type, Nothing, values) : item_type, values),
+      collect(item_type === nothing ?
+        (isempty(values) ? Any : mapreduce(typeof, promote_type, Nothing, values)) :
+        item_type, values),
       convertible.context,
       isempty(error_by_index) ? nothing : error_by_index,
     )
