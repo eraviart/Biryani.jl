@@ -303,7 +303,7 @@ strip(convertible::Convertible) = pipe(call(strip), empty_to_nothing)(convertibl
 """Strip spaces from a string and remove it when empty."""
 
 
-function struct(converters::Dict; default = nothing)
+function struct(converters::Dict; default = nothing, drop_missing = false, drop_nothing = false)
   """Return a converter that maps a dictionary of converters to a dictionary of values."""
   return convertible::Convertible -> begin
     if convertible.error !== nothing || convertible.value === nothing
@@ -323,7 +323,9 @@ function struct(converters::Dict; default = nothing)
     error_by_key = (String => Any)[]
     for (key, converter) in converter_by_key
       converted = converter(Convertible(get(convertible.value, key, nothing), convertible.context))
-      converted_value_by_key[key] = converted.value
+      if converted.value !== nothing || (!drop_nothing && (!drop_missing || key in convertible.value))
+        converted_value_by_key[key] = converted.value
+      end
       if converted.error !== nothing
         error_by_key[key] = converted.error
       end
@@ -592,7 +594,7 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
         continue
       end
       value_converted = pipe(value_converters...)(Convertible(value, convertible.context))
-      if !drop_nothing || converted.value !== nothing
+      if !drop_nothing || value_converted.value !== nothing
         value_by_key[key_converted.value] = value_converted.value
       end
       if value_converted.error !== nothing
