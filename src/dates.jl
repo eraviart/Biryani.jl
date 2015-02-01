@@ -19,6 +19,23 @@
 # limitations under the License.
 
 
+const year_or_month_or_day_re = r"(18|19|20)\d{2}(-(0[1-9]|1[0-2])(-([0-2]\d|3[0-1]))?)?$"
+
+
+iso8601_input_to_date(convertible::Convertible) = pipe(strip, iso8601_string_to_date)(convertible)
+"""Convert a string in ISO 8601 format to a date."""
+
+
+iso8601_string_to_date(convertible::Convertible) = pipe(
+  test(value -> ismatch(year_or_month_or_day_re, value), error = N_("Invalid ISO-8601 format for date.")),
+  call(value -> Date(join(vcat(split(value, '-'), ["01", "01"])[1:3], '-'))),
+)(convertible)
+"""Convert a clean string in ISO 8601 format to a date.
+
+.. note:: For a converter that doesn't require a clean string, see :func:`iso8601_input_to_date`.
+"""
+
+
 function to_date(convertible::Convertible)
   """Convert a Julia data to a date.
 

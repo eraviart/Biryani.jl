@@ -36,12 +36,12 @@ include("base.jl")
 module DatesConverters
 
 
-  export to_date
+  export iso8601_input_to_date, iso8601_string_to_date, to_date
 
 
   import Dates: Date
 
-  import ..Converters: Context, Convertible
+  import ..Converters: call, Context, Convertible, N_, pipe, strip, test
 
 
   include("dates.jl")

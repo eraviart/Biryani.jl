@@ -24,5 +24,33 @@ import Dates: Date
 importall Converters.DatesConverters
 
 
+# iso8601_input_to_date
+@test Convertible("2012-03-04") |> iso8601_input_to_date |> to_value == Date(2012, 3, 4)
+@test Convertible("2012-03") |> iso8601_input_to_date |> to_value == Date(2012, 3, 1)
+@test Convertible("2012") |> iso8601_input_to_date |> to_value == Date(2012, 1, 1)
+@test Convertible("   2012-03-04\n  ") |> iso8601_input_to_date |> to_value == Date(2012, 3, 4)
+@test Convertible("   2012-03\n  ") |> iso8601_input_to_date |> to_value == Date(2012, 3, 1)
+@test Convertible("   2012\n  ") |> iso8601_input_to_date |> to_value == Date(2012, 1, 1)
+@test Convertible("2012-03-04 05:06:07") |> iso8601_input_to_date |> to_value_error == ("2012-03-04 05:06:07",
+  "Invalid ISO-8601 format for date.")
+@test Convertible("2012-03-04T05:06:07") |> iso8601_input_to_date |> to_value_error == ("2012-03-04T05:06:07",
+  "Invalid ISO-8601 format for date.")
+@test Convertible("today") |> iso8601_input_to_date |> to_value_error == ("today", "Invalid ISO-8601 format for date.")
+@test Convertible("   \n  ") |> iso8601_input_to_date |> to_value === nothing
+
+
+# iso8601_string_to_date
+@test Convertible("2012-03-04") |> iso8601_string_to_date |> to_value == Date(2012, 3, 4)
+@test Convertible("2012-03") |> iso8601_string_to_date |> to_value == Date(2012, 3, 1)
+@test Convertible("2012") |> iso8601_string_to_date |> to_value == Date(2012, 1, 1)
+@test Convertible("2012-03-04 05:06:07") |> iso8601_string_to_date |> to_value_error == ("2012-03-04 05:06:07",
+  "Invalid ISO-8601 format for date.")
+@test Convertible("2012-03-04T05:06:07") |> iso8601_string_to_date |> to_value_error == ("2012-03-04T05:06:07",
+  "Invalid ISO-8601 format for date.")
+@test Convertible("today") |> iso8601_string_to_date |> to_value_error == ("today", "Invalid ISO-8601 format for date.")
+@test Convertible("") |> iso8601_string_to_date |> to_value_error == ("", "Invalid ISO-8601 format for date.")
+@test Convertible(nothing) |> iso8601_string_to_date |> to_value === nothing
+
+
 # to_date
 @test Convertible("2015-01-01") |> to_date |> to_value == Date(2015, 1, 1)
