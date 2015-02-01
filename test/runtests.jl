@@ -131,6 +131,13 @@ detect_unknown_values = condition(
 @test Convertible(nothing) |> input_to_email |> to_value === nothing
 @test Convertible("    \n  ") |> input_to_email |> to_value === nothing
 
+# input_to_float
+@test Convertible("42") |> input_to_float |> to_value == 42.0
+@test Convertible("   42.75\n  ") |> input_to_float |> to_value == 42.75
+@test Convertible("Hello world!") |> input_to_float |> to_value_error == ("Hello world!",
+  "Value must be a float number.")
+@test Convertible(nothing) |> input_to_float |> to_value === nothing
+
 # input_to_int
 @test Convertible("42") |> input_to_int |> to_value == 42
 @test Convertible("   42\n") |> input_to_int |> to_value == 42
@@ -390,6 +397,15 @@ tuple_non_strict_converter = struct(
 @test Convertible(nothing) |> to_bool |> to_value === nothing
 @test Convertible("vrai") |> to_bool |> to_value_error == ("vrai", "Value must be a boolean.")
 @test Convertible("on") |> to_bool |> to_value_error == ("on", "Value must be a boolean.")
+
+# to_float
+@test Convertible(42) |> to_float |> to_value == 42.0
+@test Convertible("42") |> to_float |> to_value == 42.0
+@test Convertible(42.75) |> to_float |> to_value == 42.75
+@test Convertible("42.75") |> to_float |> to_value == 42.75
+@test Convertible("   42.75  ") |> to_float |> to_value == 42.75
+@test Convertible("   42.75\n  ") |> to_float |> to_value == 42.75
+@test Convertible(nothing) |> to_float |> to_value === nothing
 
 # to_int
 @test Convertible(42) |> to_int |> to_value == 42

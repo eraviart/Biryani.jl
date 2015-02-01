@@ -22,7 +22,7 @@
 module Converters
 
 
-export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, guess_bool, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
+export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, guess_bool, input_to_bool, input_to_email, input_to_float, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_float, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
 
 
 import Base: strip
@@ -233,6 +233,10 @@ input_to_bool(convertible::Convertible) = pipe(strip, to_bool)(convertible)
 
 input_to_email(convertible::Convertible) = pipe(strip, string_to_email)(convertible)
 """Convert a string to an email address."""
+
+
+input_to_float(convertible::Convertible) = pipe(strip, to_float)(convertible)
+"""Convert a string to a float."""
 
 
 input_to_int(convertible::Convertible) = pipe(strip, to_int)(convertible)
@@ -553,6 +557,34 @@ function to_date(value::String, context::Context)
 end
 
 to_date(value, context::Context) = Convertible(Date(value), context)
+
+
+function to_float(convertible::Convertible)
+  """Convert a Julia data to a float number.
+
+  .. warning:: Like most converters, a ``nothing`` value is not converted.
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  return to_float(convertible.value, convertible.context)
+end
+
+function to_float(value::String, context::Context)
+  try
+    return Convertible(float(value), context)
+  catch
+    return Convertible(value, context, N_("Value must be a float number."))
+  end
+end
+
+function to_float(value, context::Context)
+  try
+    return Convertible(convert(Float64, value), context)
+  catch
+    return Convertible(value, context, N_("Value must be a float number."))
+  end
+end
 
 
 function to_int(convertible::Convertible)
