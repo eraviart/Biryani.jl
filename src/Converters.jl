@@ -22,7 +22,7 @@
 module Converters
 
 
-export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
+export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, guess_bool, input_to_bool, input_to_email, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_date, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
 
 
 import Base: strip
@@ -185,6 +185,38 @@ function from_value(value)
     end
     return Convertible(value, convertible.context)
   end
+end
+
+
+function guess_bool(convertible::Convertible)
+  """Convert the content of a string (or a number) to a boolean. Do nothing when input value is already a boolean.
+
+  This converter accepts usual values for ``true`` and ``false``: "0", "f", "false", "n", etc.
+
+  .. warning:: Like most converters, a ``nothing`` value is not converted.
+
+      When you want ``nothing`` to be converted to ``false``, use::
+
+        pipe(guess_bool, default(False))
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  if !isa(convertible.value, String)
+    return to_bool(convertible)
+  end
+  lower_value = strip(convertible.value) |> lowercase
+  if isempty(lower_value)
+    return Convertible(nothing, convertible.context)
+  end
+  if lower_value in ("0", "f", "false", "n", "no", "off")
+    value = false
+  elseif lower_value in ("1", "on", "t", "true", "y", "yes")
+    value = true
+  else
+    return Convertible(lower_value, convertible.context, N_("Value must be a boolean."))
+  end
+  return Convertible(value, convertible.context)
 end
 
 

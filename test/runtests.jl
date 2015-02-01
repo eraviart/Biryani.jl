@@ -78,6 +78,36 @@ detect_unknown_values = condition(
 @test Convertible(nothing) |> from_value(42) |> to_value == 42
 @test Convertible("Hello world!") |> fail |> from_value(42) |> to_value_error == ("Hello world!", "An error occured.")
 
+# guess_bool
+@test Convertible("0") |> guess_bool |> to_value == false
+@test Convertible("f") |> guess_bool |> to_value == false
+@test Convertible("FALSE") |> guess_bool |> to_value == false
+@test Convertible("false") |> guess_bool |> to_value == false
+@test Convertible("n") |> guess_bool |> to_value == false
+@test Convertible("no") |> guess_bool |> to_value == false
+@test Convertible("off") |> guess_bool |> to_value == false
+@test Convertible("   0\n  ") |> guess_bool |> to_value == false
+@test Convertible("   f\n  ") |> guess_bool |> to_value == false
+@test Convertible(false) |> guess_bool |> to_value == false
+@test Convertible("1") |> guess_bool |> to_value == true
+@test Convertible("on") |> guess_bool |> to_value == true
+@test Convertible("t") |> guess_bool |> to_value == true
+@test Convertible("TRUE") |> guess_bool |> to_value == true
+@test Convertible("true") |> guess_bool |> to_value == true
+@test Convertible("y") |> guess_bool |> to_value == true
+@test Convertible("yes") |> guess_bool |> to_value == true
+@test Convertible("   1\n  ") |> guess_bool |> to_value == true
+@test Convertible("   tRUE\n  ") |> guess_bool |> to_value == true
+@test Convertible(true) |> guess_bool |> to_value == true
+@test Convertible(1) |> guess_bool |> to_value == true
+@test Convertible(2) |> guess_bool |> to_value == true
+@test Convertible(-1) |> guess_bool |> to_value == true
+@test Convertible("") |> guess_bool |> to_value === nothing
+@test Convertible("   \n  ") |> guess_bool |> to_value === nothing
+@test Convertible(nothing) |> guess_bool |> to_value === nothing
+@test Convertible("vrai") |> guess_bool |> to_value_error == ("vrai", "Value must be a boolean.")
+
+
 # input_to_bool
 @test Convertible("0") |> input_to_bool |> to_value === false
 @test Convertible("   0\n  ") |> input_to_bool |> to_value === false
