@@ -79,29 +79,29 @@ detect_unknown_values = condition(
 @test Convertible("Hello world!") |> fail |> from_value(42) |> to_value_error == ("Hello world!", "An error occured.")
 
 # guess_bool
-@test Convertible("0") |> guess_bool |> to_value == false
-@test Convertible("f") |> guess_bool |> to_value == false
-@test Convertible("FALSE") |> guess_bool |> to_value == false
-@test Convertible("false") |> guess_bool |> to_value == false
-@test Convertible("n") |> guess_bool |> to_value == false
-@test Convertible("no") |> guess_bool |> to_value == false
-@test Convertible("off") |> guess_bool |> to_value == false
-@test Convertible("   0\n  ") |> guess_bool |> to_value == false
-@test Convertible("   f\n  ") |> guess_bool |> to_value == false
-@test Convertible(false) |> guess_bool |> to_value == false
-@test Convertible("1") |> guess_bool |> to_value == true
-@test Convertible("on") |> guess_bool |> to_value == true
-@test Convertible("t") |> guess_bool |> to_value == true
-@test Convertible("TRUE") |> guess_bool |> to_value == true
-@test Convertible("true") |> guess_bool |> to_value == true
-@test Convertible("y") |> guess_bool |> to_value == true
-@test Convertible("yes") |> guess_bool |> to_value == true
-@test Convertible("   1\n  ") |> guess_bool |> to_value == true
-@test Convertible("   tRUE\n  ") |> guess_bool |> to_value == true
-@test Convertible(true) |> guess_bool |> to_value == true
-@test Convertible(1) |> guess_bool |> to_value == true
-@test Convertible(2) |> guess_bool |> to_value == true
-@test Convertible(-1) |> guess_bool |> to_value == true
+@test Convertible("0") |> guess_bool |> to_value === false
+@test Convertible("f") |> guess_bool |> to_value === false
+@test Convertible("FALSE") |> guess_bool |> to_value === false
+@test Convertible("false") |> guess_bool |> to_value === false
+@test Convertible("n") |> guess_bool |> to_value === false
+@test Convertible("no") |> guess_bool |> to_value === false
+@test Convertible("off") |> guess_bool |> to_value === false
+@test Convertible("   0\n  ") |> guess_bool |> to_value === false
+@test Convertible("   f\n  ") |> guess_bool |> to_value === false
+@test Convertible(false) |> guess_bool |> to_value === false
+@test Convertible("1") |> guess_bool |> to_value === true
+@test Convertible("on") |> guess_bool |> to_value === true
+@test Convertible("t") |> guess_bool |> to_value === true
+@test Convertible("TRUE") |> guess_bool |> to_value === true
+@test Convertible("true") |> guess_bool |> to_value === true
+@test Convertible("y") |> guess_bool |> to_value === true
+@test Convertible("yes") |> guess_bool |> to_value === true
+@test Convertible("   1\n  ") |> guess_bool |> to_value === true
+@test Convertible("   tRUE\n  ") |> guess_bool |> to_value === true
+@test Convertible(true) |> guess_bool |> to_value === true
+@test Convertible(1) |> guess_bool |> to_value === true
+@test Convertible(2) |> guess_bool |> to_value === true
+@test Convertible(-1) |> guess_bool |> to_value === true
 @test Convertible("") |> guess_bool |> to_value === nothing
 @test Convertible("   \n  ") |> guess_bool |> to_value === nothing
 @test Convertible(nothing) |> guess_bool |> to_value === nothing
@@ -113,7 +113,7 @@ detect_unknown_values = condition(
 @test Convertible("   0\n  ") |> input_to_bool |> to_value === false
 @test Convertible("1") |> input_to_bool |> to_value === true
 @test Convertible("   1\n  ") |> input_to_bool |> to_value === true
-@test Convertible("42") |> input_to_bool |> to_value == true
+@test Convertible("42") |> input_to_bool |> to_value === true
 @test Convertible("   \n  ") |> input_to_bool |> to_value === nothing
 @test Convertible(nothing) |> input_to_bool |> to_value === nothing
 @test Convertible("vrai") |> input_to_bool |> to_value_error == ("vrai", "Value must be a boolean.")
@@ -392,8 +392,8 @@ tuple_non_strict_converter = struct(
 # to_bool
 @test Convertible("0") |> to_bool |> to_value === false
 @test Convertible("1") |> to_bool |> to_value === true
-@test Convertible(42) |> to_bool |> to_value == true
-@test Convertible("42") |> to_bool |> to_value == true
+@test Convertible(42) |> to_bool |> to_value === true
+@test Convertible("42") |> to_bool |> to_value === true
 @test Convertible(nothing) |> to_bool |> to_value === nothing
 @test Convertible("vrai") |> to_bool |> to_value_error == ("vrai", "Value must be a boolean.")
 @test Convertible("on") |> to_bool |> to_value_error == ("on", "Value must be a boolean.")
