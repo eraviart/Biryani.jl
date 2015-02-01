@@ -240,7 +240,7 @@ input_to_float(convertible::Convertible) = pipe(strip, to_float)(convertible)
 
 
 input_to_int(convertible::Convertible) = pipe(strip, to_int)(convertible)
-"""Convert a string to an integer."""
+"""Convert a string to an integer number."""
 
 
 function item_or_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
@@ -588,7 +588,7 @@ end
 
 
 function to_int(convertible::Convertible)
-  """Convert a Julia data to an integer.
+  """Convert a Julia data to an integer number.
 
   .. warning:: Like most converters, a ``nothing`` value is not converted.
   """
@@ -602,7 +602,7 @@ function to_int(value::String, context::Context)
   try
     return Convertible(int(value), context)
   catch
-    return Convertible(value, context, N_("Value must be an integer."))
+    return Convertible(value, context, N_("Value must be an integer number."))
   end
 end
 
@@ -610,7 +610,7 @@ function to_int(value, context::Context)
   try
     return Convertible(convert(Int, value), context)
   catch
-    return Convertible(value, context, N_("Value must be an integer."))
+    return Convertible(value, context, N_("Value must be an integer number."))
   end
 end
 

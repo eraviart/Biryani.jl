@@ -141,8 +141,8 @@ detect_unknown_values = condition(
 # input_to_int
 @test Convertible("42") |> input_to_int |> to_value == 42
 @test Convertible("   42\n") |> input_to_int |> to_value == 42
-@test Convertible("42.75") |> input_to_int |> to_value_error == ("42.75", "Value must be an integer.")
-@test Convertible("42,75") |> input_to_int |> to_value_error == ("42,75", "Value must be an integer.")
+@test Convertible("42.75") |> input_to_int |> to_value_error == ("42.75", "Value must be an integer number.")
+@test Convertible("42,75") |> input_to_int |> to_value_error == ("42,75", "Value must be an integer number.")
 @test Convertible(nothing) |> input_to_int |> to_value === nothing
 
 # item_or_sequence
@@ -150,7 +150,7 @@ detect_unknown_values = condition(
 @test Convertible(["42"]) |> item_or_sequence(input_to_int) |> to_value == 42
 @test Convertible(["42", "43"]) |> item_or_sequence(input_to_int) |> to_value == [42, 43]
 @test Convertible(["42", "43", "Hello world!"]) |> item_or_sequence(input_to_int) |> to_value_error == (
-  [42, 43, "Hello world!"], [3 => "Value must be an integer."])
+  [42, 43, "Hello world!"], [3 => "Value must be an integer number."])
 @test Convertible(nothing) |> item_or_sequence(input_to_int) |> to_value === nothing
 @test Convertible([nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> to_value == []
 @test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int) |> to_value == [nothing, nothing]
@@ -410,8 +410,8 @@ tuple_non_strict_converter = struct(
 # to_int
 @test Convertible(42) |> to_int |> to_value == 42
 @test Convertible("42") |> to_int |> to_value == 42
-@test Convertible("42.75") |> to_int |> to_value_error == ("42.75", "Value must be an integer.")
-@test Convertible("42,75") |> to_int |> to_value_error == ("42,75", "Value must be an integer.")
+@test Convertible("42.75") |> to_int |> to_value_error == ("42.75", "Value must be an integer number.")
+@test Convertible("42,75") |> to_int |> to_value_error == ("42,75", "Value must be an integer number.")
 @test Convertible(nothing) |> to_int |> to_value === nothing
 
 # to_string
@@ -440,7 +440,7 @@ tuple_non_strict_converter = struct(
 @test Convertible(["42"]) |> uniform_sequence(input_to_int) |> to_value == [42]
 @test Convertible(["42", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, 43]
 @test Convertible(["42", "43", "Hello world!"]) |> uniform_sequence(input_to_int) |> to_value_error == (
-  [42, 43, "Hello world!"], [3 => "Value must be an integer."])
+  [42, 43, "Hello world!"], [3 => "Value must be an integer number."])
 @test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int) |> to_value == [nothing, nothing]
 @test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == []
 @test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, nothing, 43]
@@ -462,5 +462,5 @@ tuple_non_strict_converter = struct(
 
 # to_value_error
 @test Convertible("42") |> input_to_int |> to_value_error == (42, nothing)
-@test Convertible("Hello world!") |> input_to_int |> to_value_error == ("Hello world!", "Value must be an integer.")
+@test Convertible("Hello world!") |> input_to_int |> to_value_error == ("Hello world!", "Value must be an integer number.")
 # @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> to_value_error === (true, nothing)
