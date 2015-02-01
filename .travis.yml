@@ -2,3 +2,9 @@ language: julia
 julia:
   - release
   # - nightly
+script:
+  - julia -e 'Pkg.clone(pwd())'
+  - julia -e "Pkg.build(\"${JL_PKG}\")"
+  - julia --check-bounds=yes --code-coverage -e "Pkg.test(\"${JL_PKG}\")"
+after_success:
+  - julia -e 'cd(Pkg.dir("Converters")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
