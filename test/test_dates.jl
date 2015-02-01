@@ -19,10 +19,10 @@
 # limitations under the License.
 
 
-using Base.Test
+import Dates: Date
 
-importall Converters
+importall Converters.DatesConverters
 
 
-include("test_base.jl")
-include("test_dates.jl")
+# to_date
+@test Convertible("2015-01-01") |> to_date |> to_value == Date(2015, 1, 1)
