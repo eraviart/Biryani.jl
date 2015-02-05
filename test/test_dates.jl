@@ -58,4 +58,8 @@ importall Biryani.DatesConverters
 
 
 # to_date
-@test Convertible("2015-01-01") |> to_date |> to_value == Date(2015, 1, 1)
+@test Convertible("2012-03-04") |> to_date |> to_value == Date(2012, 3, 4)
+@test Convertible("2012-03") |> to_date |> to_value == Date(2012, 3, 1)
+@test Convertible("2012") |> to_date |> to_value == Date(2012, 1, 1)
+@test Convertible(2012) |> to_date |> to_value == Date(2012, 1, 1)
+@test Convertible(nothing) |> to_date |> to_value === nothing
