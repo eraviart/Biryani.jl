@@ -102,7 +102,6 @@ detect_unknown_values = condition(
 @test Convertible(nothing) |> guess_bool |> to_value === nothing
 @test Convertible("vrai") |> guess_bool |> to_value_error == ("vrai", "Value must be a boolean.")
 
-
 # input_to_bool
 @test Convertible("0") |> input_to_bool |> to_value === false
 @test Convertible("   0\n  ") |> input_to_bool |> to_value === false
@@ -139,6 +138,12 @@ detect_unknown_values = condition(
 @test Convertible("42.75") |> input_to_int |> to_value_error == ("42.75", "Value must be an integer number.")
 @test Convertible("42,75") |> input_to_int |> to_value_error == ("42,75", "Value must be an integer number.")
 @test Convertible(nothing) |> input_to_int |> to_value === nothing
+
+# input_to_url_name
+@test Convertible("   Hello \n world!\n  ") |> input_to_url_name |> to_value == "hello_world!"
+@test Convertible("   Hello \n world!\n  ") |> input_to_url_name(separator = ' ') |> to_value == "hello world!"
+@test Convertible(nothing) |> input_to_url_name |> to_value === nothing
+@test Convertible("    \n  ") |> input_to_url_name |> to_value === nothing
 
 # item_or_sequence
 @test Convertible("42") |> item_or_sequence(input_to_int) |> to_value == 42
