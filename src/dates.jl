@@ -22,6 +22,10 @@
 const year_or_month_or_day_re = r"(18|19|20)\d{2}(-(0[1-9]|1[0-2])(-([0-2]\d|3[0-1]))?)?$"
 
 
+date_to_iso8601_string(convertible::Convertible) = call(date -> string(date))(convertible)
+"""Convert a date to a string using ISO 8601 format."""
+
+
 iso8601_input_to_date(convertible::Convertible) = pipe(strip, iso8601_string_to_date)(convertible)
 """Convert a string in ISO 8601 format to a date."""
 

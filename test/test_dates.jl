@@ -24,6 +24,11 @@ import Dates: Date
 importall Biryani.DatesConverters
 
 
+# date_to_iso8601_string
+@test Convertible(Date(2012, 3, 4)) |> date_to_iso8601_string |> to_value == "2012-03-04"
+@test Convertible(nothing) |> date_to_iso8601_string |> to_value === nothing
+
+
 # iso8601_input_to_date
 @test Convertible("2012-03-04") |> iso8601_input_to_date |> to_value == Date(2012, 3, 4)
 @test Convertible("2012-03") |> iso8601_input_to_date |> to_value == Date(2012, 3, 1)
