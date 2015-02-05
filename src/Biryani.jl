@@ -1,10 +1,10 @@
-# Converters -- A conversion and validation toolbox
+# Biryani -- A conversion and validation toolbox
 # By: Emmanuel Raviart <emmanuel@raviart.com>
 #
-# Copyright (C) 2015 Etalab
-# https://github.com/etalab/Converters.jl
+# Copyright (C) 2015 Emmanuel Raviart
+# https://github.com/eraviart/Biryani.jl
 #
-# This file is part of Converters.
+# This file is part of Biryani.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 # limitations under the License.
 
 
-module Converters
+module Biryani
 
 
 export _, call, condition, Convertible, default, empty_to_nothing, extract_when_singleton, fail, from_value, guess_bool, input_to_bool, input_to_email, input_to_float, input_to_int, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_greater_or_equal, test_in, test_isa, to_bool, to_float, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
@@ -41,7 +41,7 @@ module DatesConverters
 
   import Dates: Date
 
-  import ..Converters: call, Context, Convertible, N_, pipe, strip, test
+  import ..Biryani: call, Context, Convertible, N_, pipe, strip, test
 
 
   include("dates.jl")
@@ -50,4 +50,4 @@ module DatesConverters
 end  # module DatesConverters
 
 
-end  # module Converters
+end  # module Biryani

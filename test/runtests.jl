@@ -1,10 +1,10 @@
-# Converters -- A conversion and validation toolbox
+# Biryani -- A conversion and validation toolbox
 # By: Emmanuel Raviart <emmanuel@raviart.com>
 #
 # Copyright (C) 2015 Emmanuel Raviart
-# https://github.com/eraviart/Converters.jl
+# https://github.com/eraviart/Biryani.jl
 #
-# This file is part of Converters.
+# This file is part of Biryani.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 using Base.Test
 
-importall Converters
+importall Biryani
 
 
 include("test_base.jl")

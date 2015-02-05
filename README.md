@@ -1,16 +1,16 @@
-# Converters
+# Biryani
 
 A data conversion and validation toolbox, written in Julia.
 
-[![Build Status](https://travis-ci.org/eraviart/Converters.jl.svg?branch=master)](https://travis-ci.org/eraviart/Converters.jl)
-[![Coverage Status](https://coveralls.io/repos/eraviart/Converters.jl/badge.svg?branch=master)](https://coveralls.io/r/eraviart/Converters.jl?branch=master)
+[![Build Status](https://travis-ci.org/eraviart/Biryani.jl.svg?branch=master)](https://travis-ci.org/eraviart/Biryani.jl)
+[![Coverage Status](https://coveralls.io/repos/eraviart/Biryani.jl/badge.svg?branch=master)](https://coveralls.io/r/eraviart/Biryani.jl?branch=master)
 
 ## Quickstart
 
 ```julia
-julia> Pkg.add("Converters")
+julia> Pkg.add("Biryani")
 
-julia> using Converters
+julia> using Biryani
 ```
 
 ## Usage Examples
@@ -64,7 +64,7 @@ When conversion has failed (the convertible has an `error` field), `to_value` th
 julia> Convertible("John.DOE.name") |> input_to_email |> to_value
 ERROR: An email must contain exactly one "@".
 Value: john.doe.name
- in to_value at /home/manou/.julia/v0.3/Converters/src/Converters.jl:571
+ in to_value at .../Biryani.jl:571
  in |> at ./operators.jl:178
 ```
 
