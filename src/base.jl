@@ -164,6 +164,8 @@ end
 
 fail(error::String) = convertible::Convertible -> fail(convertible, error = error)
 
+fail(; error::String = nothing) = convertible::Convertible -> fail(convertible, error = error)
+
 
 function from_value(value)
   """Return a converter that replace any value with given one."""
