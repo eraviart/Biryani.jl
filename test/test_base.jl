@@ -364,6 +364,16 @@ tuple_non_strict_converter = struct(
   "Number must be a digit.")
 @test Convertible(nothing) |> test_between(0, 9) |> to_value === nothing
 
+# test_equal
+@test Convertible(42) |> test_equal(42) |> to_value == 42
+@test Convertible(["a" => 1, "b" => 2]) |> test_equal(["a" => 1, "b" => 2]) |> to_value == ["a" => 1, "b" => 2]
+@test Convertible(41) |> test_equal(42) |> to_value_error == (41, "Value must be equal to 42.")
+@test Convertible(41) |> test_equal(42, error = "Value is not the answer.") |> to_value_error == (41,
+  "Value is not the answer.")
+@test Convertible(42) |> test_equal(nothing) |> to_value_error == (42, "Value must be equal to nothing.")
+@test Convertible(nothing) |> test_equal(42) |> to_value === nothing
+@test Convertible(nothing) |> test_equal(nothing) |> to_value === nothing
+
 # test_greater_or_equal
 @test Convertible(5) |> test_greater_or_equal(0) |> to_value == 5
 @test Convertible(5) |> test_greater_or_equal(9) |> to_value_error == (5,

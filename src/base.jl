@@ -453,6 +453,18 @@ function test_between(min_value, max_value; error = nothing)
 end
 
 
+function test_equal(comparison_value; error = nothing)
+  """Return a converter that accepts only values equals to given value.
+
+  .. warning:: Like most converters, a ``nothing`` value is not compared.
+  """
+  return test(
+    value -> value == comparison_value,
+    error = error === nothing ? context -> _(context, "Value must be equal to $comparison_value.") : error,
+  )
+end
+
+
 function test_greater_or_equal(min_value; error = nothing)
   """Return a converter that accepts only values greater than or equal to given value.
 
