@@ -4,6 +4,7 @@ A data conversion and validation toolbox, written in Julia.
 
 [![Build Status](https://travis-ci.org/eraviart/Biryani.jl.svg?branch=master)](https://travis-ci.org/eraviart/Biryani.jl)
 [![Coverage Status](https://coveralls.io/repos/eraviart/Biryani.jl/badge.svg?branch=master)](https://coveralls.io/r/eraviart/Biryani.jl?branch=master)
+[![Biryani](http://pkg.julialang.org/badges/Biryani_release.svg)](http://pkg.julialang.org/?pkg=Biryani&ver=release)
 
 ## Quickstart
 
