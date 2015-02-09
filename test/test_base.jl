@@ -67,6 +67,18 @@ detect_unknown_values = condition(
 @test Convertible(42) |> fail("Wrong answer.") |> to_value_error == (42, "Wrong answer.")
 @test Convertible(nothing) |> fail |> to_value_error == (nothing, "An error occured.")
 
+# first_match
+@test Convertible(42) |> first_match(to_int, test_equal("NaN")) |> to_value == 42
+@test Convertible("NaN") |> first_match(to_int, test_equal("NaN")) |> to_value == "NaN"
+@test Convertible("Hello world!") |> first_match(to_int, test_equal("NaN")) |> to_value_error == ("Hello world!",
+  "Value must be equal to NaN.")
+@test Convertible("Hello world!") |> first_match(to_int, test_equal("NaN"),
+  error = "Value must be a integer or NaN.") |> to_value_error == ("Hello world!", "Value must be a integer or NaN.")
+@test Convertible("Hello world!") |> first_match(to_int, test_equal("NaN"), from_value(0)) |> to_value == 0
+@test Convertible("Hello world!") |> first_match() |> to_value == "Hello world!"
+@test Convertible("Hello world!") |> first_match(error = "An error occured.") |> to_value == "Hello world!"
+@test Convertible(nothing) |> first_match(to_int, test_equal("NaN")) |> to_value === nothing
+
 # from_value
 @test Convertible("Answer to the Ultimate Question of Life, the Universe, and Everything") |> from_value(42) |>
   to_value == 42

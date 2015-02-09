@@ -70,7 +70,7 @@ function call(func::Function; handle_nothing = false)
 end
 
 
-function condition(converters...)
+function condition(converters::Function...)
   """When first converter succeeds (ie no error), then apply the second converter, otherwise test the third converter...
 
   When the number of converters is odd, the last converter is applied when all tests have failed (ie: its is an "else"
@@ -165,6 +165,27 @@ end
 fail(error::String) = convertible::Convertible -> fail(convertible, error = error)
 
 fail(; error::String = nothing) = convertible::Convertible -> fail(convertible, error = error)
+
+
+function first_match(converters::Function...; error = nothing)
+  """Try each converter successively until one succeeds. When every converter fail, return an error.
+
+  .. note:: See also :func:`condition`.
+  """
+  return convertible::Convertible -> begin
+    if isempty(converters)
+      return convertible
+    end
+    converted = convertible
+    for converter in converters
+      converted = converter(convertible)
+      if converted.error === nothing
+        return converted
+      end
+    end
+    return error === nothing ? converted : Convertible(convertible.value, convertible.context, error)
+  end
+end
 
 
 function from_value(value)
