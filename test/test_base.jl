@@ -131,6 +131,7 @@ detect_unknown_values = condition(
 @test Convertible("root@localhost") |> input_to_email |> to_value == "root@localhost"
 @test Convertible("root@127.0.0.1") |> input_to_email |> to_value_error == ("root@127.0.0.1",
   "Invalid domain name.")
+@test Convertible("root@127.0.0.1") |> input_to_email(accept_ip_address = true) |> to_value == "root@127.0.0.1"
 @test Convertible("root") |> input_to_email |> to_value_error == ("root",
   """An email must contain exactly one "@".""")
 @test Convertible("    john@doe.name\n  ") |> input_to_email |> to_value == "john@doe.name"

@@ -36,13 +36,6 @@ type EmptyContext <: Context
 end
 
 
-domain_re = r"""
-  (?:[a-z0-9][a-z0-9\-]{0,62}\.)+ # (sub)domain - alpha followed by 62max chars (63 total)
-  [a-z]{2,}$                      # TLD
-  """ix
-username_re = r"[^ \t\n\r@<>()]+$"i
-
-
 _(context::EmptyContext, message::String) = message
 
 
@@ -242,8 +235,14 @@ input_to_bool(convertible::Convertible) = pipe(strip, to_bool)(convertible)
 """
 
 
-input_to_email(convertible::Convertible) = pipe(strip, string_to_email)(convertible)
+input_to_email(convertible::Convertible; accept_ip_address = false) = pipe(
+  strip,
+  string_to_email(accept_ip_address = accept_ip_address),
+)(convertible)
 """Convert a string to an email address."""
+
+input_to_email(; accept_ip_address = false) = convertible::Convertible -> input_to_email(convertible,
+  accept_ip_address = accept_ip_address)
 
 
 input_to_float(convertible::Convertible) = pipe(strip, to_float)(convertible)
@@ -340,7 +339,7 @@ require(convertible::Convertible) = convertible.error === nothing && convertible
 """Return an error when value is ``nothing``."""
 
 
-function string_to_email(convertible::Convertible)
+function string_to_email(convertible::Convertible; accept_ip_address = false)
   """Convert a clean string to an email address.
 
   .. note:: For a converter that doesn't require a clean string, see :func:`input_to_email`.
@@ -357,14 +356,22 @@ function string_to_email(convertible::Convertible)
     return Convertible(value, convertible.context, N_("""An email must contain exactly one "@"."""))
   end
   username, domain = split_value
-  if !ismatch(username_re, username)
+  if !ismatch(r"[^ \t\n\r@<>()]+$"i, username)
     return Convertible(value, convertible.context, N_("Invalid username."))
   end
-  if !ismatch(domain_re, domain) && domain != "localhost"
+  if domain != "localhost" &&
+      !ismatch(r"""
+        ^(?:[a-z0-9][a-z0-9\-]{0,62}\.)+ # (sub)domain - alpha followed by 62max chars (63 total)
+        [a-z]{2,}$                      # TLD
+      """ix, domain) &&
+      (!accept_ip_address || !ismatch(r"^\d+\.\d+\.\d+\.\d+$", domain))
     return Convertible(value, convertible.context, N_("Invalid domain name."))
   end
   return Convertible(value, convertible.context)
 end
+
+string_to_email(; accept_ip_address = false) = convertible::Convertible -> string_to_email(convertible,
+  accept_ip_address = accept_ip_address)
 
 
 strip(convertible::Convertible) = pipe(call(strip), empty_to_nothing)(convertible)
