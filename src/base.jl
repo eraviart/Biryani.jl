@@ -340,7 +340,7 @@ function pipe(converters::Function...)
   return convertible::Convertible -> begin
     for converter in converters
       convertible = converter(convertible)
-      @assert typeof(convertible) <: Convertible
+      @assert(typeof(convertible) <: Convertible)
     end
     return convertible
   end
