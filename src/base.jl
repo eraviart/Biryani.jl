@@ -107,6 +107,56 @@ function default(value)
 end
 
 
+function embed_error(value, error)
+  """Embed errors inside value.
+
+  .. note:: value is modified. No copy is made.
+  """
+  if error === nothing
+    return nothing
+  end
+  if isa(value, Union(Dict, OrderedDict))
+    if isa(error, Union(Dict, OrderedDict))
+      for (child_key, child_error) in error
+        child_error = embed_error(get(value, child_key, nothing), child_error)
+        if child_error !== nothing
+          errors = get!(value, "errors") do
+            return (typeof(child_key) => Any)[]
+          end
+          errors[child_key] = child_error
+        end
+      end
+    else
+      value["errors"] = error
+    end
+    return nothing
+  end
+  if isa(value, Array) && isa(error, Union(Dict, OrderedDict))
+    if all(key -> isa(key, Integer) && 1 <= key <= size(value, 1), error)
+      for (child_index, child_error) in error
+        child_error = embed_error(value[child_index], child_error)
+        @assert(child_error === nothing, child_error)
+        # if child_error !== nothing
+        #   return error
+        # end
+      end
+      return nothing
+    end
+    if all(key -> isa(key, String) && isdigit(key) && 1 <= int(key) <= size(value, 1), error)
+      for (child_key, child_error) in error
+        child_error = embed_error(value[int(child_key)], child_error)
+        @assert(child_error === nothing, child_error)
+        # if child_error !== nothing
+        #   return error
+        # end
+      end
+      return nothing
+    end
+  end
+  return error
+end
+
+
 function empty_to_nothing(convertible::Convertible)
   """When value is an empty collection, replace it with ``nothing`` else keep it as is."""
   if convertible.error !== nothing || convertible.value === nothing || !isempty(convertible.value)
