@@ -412,6 +412,8 @@ tuple_non_strict_converter = struct(
 @test Convertible('a') |> test_in(['a', 'b', 'c', 'd']) |> to_value == 'a'
 @test Convertible('z') |> test_in(['a', 'b', 'c', 'd']) |> to_value_error == ('z',
   "Value must belong to Char[a,b,c,d].")
+@test Convertible('z') |> test_in(Set('a', 'b', 'c', 'd')) |> to_value_error == ('z',
+  "Value must belong to Set{Char}({'d','b','c','a'}).")
 @test Convertible('z') |> test_in(['a', 'b', 'c', 'd'], error = """Value must be a letter less than "e".""") |>
   to_value_error == ('z', """Value must be a letter less than "e".""")
 @test Convertible('z') |> test_in([]) |> to_value_error == ('z', "Value must belong to None[].")

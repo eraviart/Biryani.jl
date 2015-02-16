@@ -547,7 +547,11 @@ function test_in(values; error = nothing)
     value -> value in values,
     error = error === nothing ? context -> _(
       context,
-      string("Value must belong to ", length(values) > 5 ? string(values[1:5]..., "...") : values, "."),
+      string(
+        "Value must belong to ",
+        length(values) > 5 ? string(collect(values)[1:5]..., "...") : values,
+        ".",
+      ),
     ) : error,
   )
 end
