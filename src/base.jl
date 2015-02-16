@@ -579,7 +579,7 @@ function test_in(values::Dict; error = nothing)
       context,
       string(
         "Value must belong to ",
-        length(values_key) > 5 ? string(join(collect(values_key)[1:5]..., ", "), "...") : values_key,
+        length(values_key) > 5 ? string(join(collect(values_key)[1:5], ", "), "..") : values_key,
         ".",
       ),
     ) : error,
@@ -598,7 +598,7 @@ function test_in(values::Set; error = nothing)
       context,
       string(
         "Value must belong to ",
-        length(values) > 5 ? string(join(collect(values)[1:5]..., ", "), "...") : collect(values),
+        length(values) > 5 ? string(join(collect(values)[1:5], ", "), "..") : collect(values),
         ".",
       ),
     ) : error,
@@ -616,7 +616,7 @@ function test_in(values; error = nothing)
       context,
       string(
         "Value must belong to ",
-        length(values) > 5 ? string(join(values[1:5]..., ", "), "...") : values,
+        length(values) > 5 ? string(join(values[1:5], ", "), "..") : values,
         ".",
       ),
     ) : error,
