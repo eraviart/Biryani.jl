@@ -120,9 +120,7 @@ function embed_error(value, error)
       for (child_key, child_error) in error
         child_error = embed_error(get(value, child_key, nothing), child_error)
         if child_error !== nothing
-          errors = get!(value, "errors") do
-            return (typeof(child_key) => Any)[]
-          end
+          errors = get(value, "errors", (typeof(child_key) => Any)[])
           errors[child_key] = child_error
         end
       end
@@ -570,7 +568,7 @@ end
 
 
 function test_in(values::Dict; error = nothing)
-  """Return a converter that accepts only values belonging to a given set (or array or...).
+  """Return a converter that accepts only values belonging to the keys of a given dictionary.
 
   .. warning:: Like most converters, a ``nothing`` value is not compared.
   """
@@ -581,7 +579,26 @@ function test_in(values::Dict; error = nothing)
       context,
       string(
         "Value must belong to ",
-        length(values_key) > 5 ? string(collect(values_key)[1:5]..., "...") : values_key,
+        length(values_key) > 5 ? string(join(collect(values_key)[1:5]..., ", "), "...") : values_key,
+        ".",
+      ),
+    ) : error,
+  )
+end
+
+
+function test_in(values::Set; error = nothing)
+  """Return a converter that accepts only values belonging to a given set.
+
+  .. warning:: Like most converters, a ``nothing`` value is not compared.
+  """
+  return test(
+    value -> value in values,
+    error = error === nothing ? context -> _(
+      context,
+      string(
+        "Value must belong to ",
+        length(values) > 5 ? string(join(collect(values)[1:5]..., ", "), "...") : collect(values),
         ".",
       ),
     ) : error,
@@ -599,7 +616,7 @@ function test_in(values; error = nothing)
       context,
       string(
         "Value must belong to ",
-        length(values) > 5 ? string(collect(values)[1:5]..., "...") : values,
+        length(values) > 5 ? string(join(values[1:5]..., ", "), "...") : values,
         ".",
       ),
     ) : error,
