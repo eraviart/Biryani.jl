@@ -245,12 +245,26 @@ input_to_email(; accept_ip_address = false) = convertible::Convertible -> input_
   accept_ip_address = accept_ip_address)
 
 
-input_to_float(convertible::Convertible) = pipe(strip, to_float)(convertible)
+input_to_float(convertible::Convertible; accept_expression = false) = pipe(
+  strip,
+  to_float(accept_expression = accept_expression),
+)(convertible)
 """Convert a string to a float."""
 
+function input_to_float(; accept_expression = false)
+  return convertible::Convertible -> input_to_float(convertible; accept_expression = accept_expression)
+end
 
-input_to_int(convertible::Convertible) = pipe(strip, to_int)(convertible)
+
+input_to_int(convertible::Convertible; accept_expression = false) = pipe(
+  strip,
+  to_int(accept_expression = accept_expression),
+)(convertible)
 """Convert a string to an integer number."""
+
+function input_to_int(; accept_expression = false)
+  return convertible::Convertible -> input_to_int(convertible; accept_expression = accept_expression)
+end
 
 
 function input_to_url_name(convertible::Convertible; separator = '_')
@@ -584,7 +598,7 @@ function to_bool(value::String, context::Context)
 end
 
 
-function to_float(convertible::Convertible)
+function to_float(convertible::Convertible; accept_expression = false)
   """Convert a Julia data to a float number.
 
   .. warning:: Like most converters, a ``nothing`` value is not converted.
@@ -592,7 +606,23 @@ function to_float(convertible::Convertible)
   if convertible.error !== nothing || convertible.value === nothing
     return convertible
   end
-  return to_float(convertible.value, convertible.context)
+  value = convertible.value
+  if accept_expression && isa(value, String)
+    value = strip(value)
+    if !ismatch(r"^[ \t\n\r\d.+\-*/()]+$", value)
+      return Convertible(value, convertible.context, N_("Value must be a valid floating point expression."))
+    end
+    try
+      value = eval(parse(value))
+    catch
+      return Convertible(value, convertible.context, N_("Value must be a valid floating point expression."))
+    end
+  end
+  return to_float(value, convertible.context)
+end
+
+function to_float(; accept_expression = false)
+  return convertible::Convertible -> to_float(convertible; accept_expression = accept_expression)
 end
 
 function to_float(value::String, context::Context)
@@ -612,7 +642,7 @@ function to_float(value, context::Context)
 end
 
 
-function to_int(convertible::Convertible)
+function to_int(convertible::Convertible; accept_expression = false)
   """Convert a Julia data to an integer number.
 
   .. warning:: Like most converters, a ``nothing`` value is not converted.
@@ -620,7 +650,23 @@ function to_int(convertible::Convertible)
   if convertible.error !== nothing || convertible.value === nothing
     return convertible
   end
-  return to_int(convertible.value, convertible.context)
+  value = convertible.value
+  if accept_expression && isa(value, String)
+    value = strip(value)
+    if !ismatch(r"^[ \t\n\r\d.+\-*/()]+$", value)
+      return Convertible(value, convertible.context, N_("Value must be a valid integer expression."))
+    end
+    try
+      value = eval(parse(value))
+    catch
+      return Convertible(value, convertible.context, N_("Value must be a valid integer expression."))
+    end
+  end
+  return to_int(value, convertible.context)
+end
+
+function to_int(; accept_expression = false)
+  return convertible::Convertible -> to_int(convertible; accept_expression = accept_expression)
 end
 
 function to_int(value::String, context::Context)

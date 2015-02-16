@@ -143,13 +143,25 @@ detect_unknown_values = condition(
 @test Convertible("   42.75\n  ") |> input_to_float |> to_value == 42.75
 @test Convertible("Hello world!") |> input_to_float |> to_value_error == ("Hello world!",
   "Value must be a float number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> input_to_float |> to_value_error == ("(42 / 42 + 1) * 42 - 42",
+  "Value must be a float number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> input_to_float(accept_expression = true) |> to_value == 42.0
+@test Convertible("pi / 2") |> input_to_float(accept_expression = true) |> to_value_error == ("pi / 2",
+  "Value must be a valid floating point expression.")
+@test Convertible("1 / 3") |> input_to_float(accept_expression = true) |> to_value == 0.3333333333333333
 @test Convertible(nothing) |> input_to_float |> to_value === nothing
 
 # input_to_int
 @test Convertible("42") |> input_to_int |> to_value == 42
 @test Convertible("   42\n") |> input_to_int |> to_value == 42
 @test Convertible("42.75") |> input_to_int |> to_value_error == ("42.75", "Value must be an integer number.")
-@test Convertible("42,75") |> input_to_int |> to_value_error == ("42,75", "Value must be an integer number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> input_to_int |> to_value_error == ("(42 / 42 + 1) * 42 - 42",
+  "Value must be an integer number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> input_to_int(accept_expression = true) |> to_value == 42
+@test Convertible("pi / 2") |> input_to_int(accept_expression = true) |> to_value_error == ("pi / 2",
+  "Value must be a valid integer expression.")
+@test Convertible("1 / 3") |> input_to_int(accept_expression = true) |> to_value_error == (0.3333333333333333,
+  "Value must be an integer number.")
 @test Convertible(nothing) |> input_to_int |> to_value === nothing
 
 # input_to_url_name
@@ -428,6 +440,12 @@ tuple_non_strict_converter = struct(
 @test Convertible("42.75") |> to_float |> to_value == 42.75
 @test Convertible("   42.75  ") |> to_float |> to_value == 42.75
 @test Convertible("   42.75\n  ") |> to_float |> to_value == 42.75
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> to_float |> to_value_error == ("(42 / 42 + 1) * 42 - 42",
+  "Value must be a float number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> to_float(accept_expression = true) |> to_value == 42.0
+@test Convertible("pi / 2") |> to_float(accept_expression = true) |> to_value_error == ("pi / 2",
+  "Value must be a valid floating point expression.")
+@test Convertible("1 / 3") |> to_float(accept_expression = true) |> to_value == 0.3333333333333333
 @test Convertible(nothing) |> to_float |> to_value === nothing
 
 # to_int
@@ -435,6 +453,13 @@ tuple_non_strict_converter = struct(
 @test Convertible("42") |> to_int |> to_value == 42
 @test Convertible("42.75") |> to_int |> to_value_error == ("42.75", "Value must be an integer number.")
 @test Convertible("42,75") |> to_int |> to_value_error == ("42,75", "Value must be an integer number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> to_int |> to_value_error == ("(42 / 42 + 1) * 42 - 42",
+  "Value must be an integer number.")
+@test Convertible("(42 / 42 + 1) * 42 - 42") |> to_int(accept_expression = true) |> to_value == 42
+@test Convertible("pi / 2") |> to_int(accept_expression = true) |> to_value_error == ("pi / 2",
+  "Value must be a valid integer expression.")
+@test Convertible("1 / 3") |> to_int(accept_expression = true) |> to_value_error == (0.3333333333333333,
+  "Value must be an integer number.")
 @test Convertible(nothing) |> to_int |> to_value === nothing
 
 # to_string
