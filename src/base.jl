@@ -120,7 +120,7 @@ function embed_error(value, error)
       for (child_key, child_error) in error
         child_error = embed_error(get(value, child_key, nothing), child_error)
         if child_error !== nothing
-          errors = get(value, "errors", (typeof(child_key) => Any)[])
+          errors = get!(value, "errors", (typeof(child_key) => Any)[])
           errors[child_key] = child_error
         end
       end
