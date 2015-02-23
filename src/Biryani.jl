@@ -50,4 +50,21 @@ module DatesConverters
 end  # module DatesConverters
 
 
+module JsonConverters
+
+
+  export input_to_json
+
+
+  import JSON
+
+  import ..Biryani: Convertible, N_
+
+
+  include("json.jl")
+
+
+end  # module JsonConverters
+
+
 end  # module Biryani

@@ -19,11 +19,22 @@
 # limitations under the License.
 
 
-using Base.Test
+function input_to_json(convertible::Convertible)
+  """Convert a JSON string to Julia data.
 
-importall Biryani
-
-
-include("test_base.jl")
-include("test_dates.jl")
-include("test_json.jl")
+  .. warning:: Like most converters, a ``nothing`` value is not converted.
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  try
+    value = JSON.parse(convertible.value)
+    return Convertible(value, convertible.context)
+  catch exception
+    if isa(exception, BoundsError) || isa(exception, ErrorException)
+      return Convertible(convertible.value, convertible.context, N_("Invalid JSON"))
+    else
+      rethrow()
+    end
+  end
+end
