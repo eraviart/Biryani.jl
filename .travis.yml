@@ -3,6 +3,7 @@ julia:
   - release
   # - nightly
 script:
+  - pwd
   - julia -e 'Pkg.clone(pwd())'
   - julia -e "Pkg.build(\"Biryani\")"
   - julia --check-bounds=yes --code-coverage -e "Pkg.test(\"Biryani\", coverage = true)"
