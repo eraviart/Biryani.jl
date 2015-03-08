@@ -543,7 +543,7 @@ function test_between(min_value, max_value; error = nothing)
 end
 
 
-function test_equal(comparison_value; error = nothing)
+function test_equal(comparison_value; error = nothing, handle_nothing = false)
   """Return a converter that accepts only values equals to given value.
 
   .. warning:: Like most converters, a ``nothing`` value is not compared.
@@ -551,6 +551,7 @@ function test_equal(comparison_value; error = nothing)
   return test(
     value -> value == comparison_value,
     error = error === nothing ? context -> _(context, "Value must be equal to $comparison_value.") : error,
+    handle_nothing = handle_nothing,
   )
 end
 
@@ -567,7 +568,7 @@ function test_greater_or_equal(min_value; error = nothing)
 end
 
 
-function test_in(values::Dict; error = nothing)
+function test_in(values::Dict; error = nothing, handle_nothing = false)
   """Return a converter that accepts only values belonging to the keys of a given dictionary.
 
   .. warning:: Like most converters, a ``nothing`` value is not compared.
@@ -583,10 +584,11 @@ function test_in(values::Dict; error = nothing)
         ".",
       ),
     ) : error,
+    handle_nothing = handle_nothing,
   )
 end
 
-function test_in(values::Set; error = nothing)
+function test_in(values::Set; error = nothing, handle_nothing = false)
   """Return a converter that accepts only values belonging to a given set.
 
   .. warning:: Like most converters, a ``nothing`` value is not compared.
@@ -601,10 +603,11 @@ function test_in(values::Set; error = nothing)
         ".",
       ),
     ) : error,
+    handle_nothing = handle_nothing,
   )
 end
 
-function test_in(values; error = nothing)
+function test_in(values; error = nothing, handle_nothing = false)
   """Return a converter that accepts only values belonging to a given set (or array or...).
 
   .. warning:: Like most converters, a ``nothing`` value is not compared.
@@ -619,15 +622,17 @@ function test_in(values; error = nothing)
         ".",
       ),
     ) : error,
+    handle_nothing = handle_nothing,
   )
 end
 
 
-function test_isa(data_type::Union(DataType, UnionType); error = nothing)
+function test_isa(data_type::Union(DataType, UnionType); error = nothing, handle_nothing = false)
   """Return a converter that accepts only an instance of given type."""
   return test(
     value -> isa(value, data_type),
     error = error === nothing ? context -> _(context, "Value must be an instance of $data_type.") : error,
+    handle_nothing = handle_nothing,
   )
 end
 
