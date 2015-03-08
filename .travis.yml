@@ -3,9 +3,9 @@ julia:
   - release
   # - nightly
 script:
-  - pwd
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd())'
-  - julia -e "Pkg.build(\"Biryani\")"
-  - julia --check-bounds=yes --code-coverage -e "Pkg.test(\"Biryani\", coverage = true)"
+  - julia -e 'Pkg.build("Biryani")'
+  - julia --check-bounds=yes --code-coverage -e 'Pkg.test("Biryani", coverage = true)'
 after_success:
   - julia -e 'cd(Pkg.dir("Biryani")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
