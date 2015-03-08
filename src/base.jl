@@ -315,7 +315,7 @@ function input_to_int(; accept_expression = false)
 end
 
 
-function input_to_url_name(convertible::Convertible; separator = '_')
+function input_to_url_name(convertible::Convertible; separator = '_', stripmark = false)
   """Normalize a string to allow its use in an URL (or file system) path or a query parameter.
 
   .. note:: For a converter that keeps only letters, digits and separator, see :func:`input_to_slug`.
@@ -324,15 +324,15 @@ function input_to_url_name(convertible::Convertible; separator = '_')
     return convertible
   end
   value = normalize_string(convertible.value, casefold = true, compat = true, decompose = true, stable = true,
-    stripcc = true, stripignore = true)
+    stripcc = true, stripignore = true, stripmark = stripmark)
   # Replace unsafe characters (for URLs and file-systems).
   value = replace(value, ['\n', '\r', '\\', '/', ';', ':', '"', '#', '*', '?', '&', '<', '>', '|', '.'], ' ')
   value = join(split(value), separator)
   return Convertible(isempty(value) ? nothing : value, convertible.context)
 end
 
-function input_to_url_name(; separator = '_')
-  return convertible::Convertible -> input_to_url_name(convertible, separator = separator)
+function input_to_url_name(; separator = '_', stripmark = false)
+  return convertible::Convertible -> input_to_url_name(convertible, separator = separator, stripmark = stripmark)
 end
 
 

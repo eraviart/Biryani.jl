@@ -167,6 +167,8 @@ detect_unknown_values = condition(
 # input_to_url_name
 @test Convertible("   Hello \n world!\n  ") |> input_to_url_name |> to_value == "hello_world!"
 @test Convertible("   Hello \n world!\n  ") |> input_to_url_name(separator = ' ') |> to_value == "hello world!"
+@test Convertible("ÉÀÎÔÛêâîôùÆŒæœÇç") |> input_to_url_name |> to_value == "éàîôûêâîôùæœæœçç"
+@test Convertible("ÉÀÎÔÛêâîôùÆŒæœÇç") |> input_to_url_name(stripmark = true) |> to_value == "eaioueaiouæœæœcc"
 @test Convertible(nothing) |> input_to_url_name |> to_value === nothing
 @test Convertible("    \n  ") |> input_to_url_name |> to_value === nothing
 
