@@ -36,3 +36,5 @@ importall Biryani.JsonConverters
 @test Convertible("") |> input_to_json |> to_value == nothing
 @test Convertible("   ") |> input_to_json |> to_value_error == ("   ", "Invalid JSON")
 @test Convertible(nothing) |> input_to_json |> to_value === nothing
+@test Convertible("""{"a": 1, "b": [2, "three"]}""") |> fail("Initial error.") |> input_to_json |> to_value_error == (
+  """{"a": 1, "b": [2, "three"]}""", "Initial error.")
