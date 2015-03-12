@@ -54,7 +54,7 @@ function call(func::Function; handle_nothing = false)
 
   See :doc:`how-to-create-converter` for more information.
   """
-  return convertible::Convertible -> begin
+  return function run_call(convertible::Convertible)
     if convertible.error !== nothing || convertible.value === nothing && !handle_nothing
       return convertible
     end
@@ -71,7 +71,7 @@ function condition(converters::Function...)
 
   .. note:: See also :func:`first_match`.
   """
-  return convertible::Convertible -> begin
+  return function run_condition(convertible::Convertible)
     last_index = length(converters)
     ok = false
     for (index, converter) in enumerate(converters)
@@ -98,7 +98,7 @@ function default(value)
 
   .. note:: See converter :func:`from_value` to replace a non-``default`` value.
   """
-  return convertible::Convertible -> begin
+  return function run_default(convertible::Convertible)
     if convertible.error !== nothing || convertible.value !== nothing
       return convertible
     end
@@ -213,7 +213,7 @@ function first_match(converters::Function...; error = nothing)
 
   .. note:: See also :func:`condition`.
   """
-  return convertible::Convertible -> begin
+  return function run_first_match(convertible::Convertible)
     if isempty(converters)
       return convertible
     end
@@ -231,7 +231,7 @@ end
 
 function from_value(value)
   """Return a converter that replace any value with given one."""
-  return convertible::Convertible -> begin
+  return function run_from_value(convertible::Convertible)
     if convertible.error !== nothing
       return convertible
     end
@@ -385,7 +385,7 @@ noop(convertible::Convertible) = convertible
 
 function pipe(converters::Function...)
   """Return a compound converter that applies each of its converters till the end or an error occurs."""
-  return convertible::Convertible -> begin
+  return function run_pipe(convertible::Convertible)
     for converter in converters
       convertible = converter(convertible)
       @assert(typeof(convertible) <: Convertible)
@@ -442,7 +442,7 @@ strip(convertible::Convertible) = pipe(call(strip), empty_to_nothing)(convertibl
 
 function struct(converters::Dict; default = nothing, drop_missing = false, drop_nothing = false)
   """Return a converter that maps a dictionary of converters to a dictionary of values."""
-  return convertible::Convertible -> begin
+  return function run_struct(convertible::Convertible)
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
@@ -474,7 +474,7 @@ end
 
 function struct(converters::Tuple; default = nothing)
   """Return a converter that maps a tuple of converters to a tuple (or array) of values."""
-  return convertible::Convertible -> begin
+  return function run_struct(convertible::Convertible)
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
@@ -518,7 +518,7 @@ function test(func; error = nothing, handle_nothing = false)
 
    See :doc:`how-to-create-converter` for more information.
   """
-  return convertible::Convertible -> begin
+  return function run_test(convertible::Convertible)
     if convertible.error !== nothing || convertible.value === nothing && !handle_nothing || func(convertible.value)
       return convertible
     end
@@ -789,7 +789,7 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
     drop_nothing_keys = false, key_type = nothing, value_type = nothing)
   """Return a converter that applies a unique converter to each key and another one to each value of a mapping."""
   # TODO: Handle constructor.
-  return convertible::Convertible -> begin
+  return function run_uniform_mapping(convertible::Convertible)
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
@@ -843,7 +843,7 @@ end
 function uniform_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
   """Return a converter that applies the same converter to each value of an array."""
   # TODO: Handle constructor or sequence_type.
-  return convertible::Convertible -> begin
+  return function run_uniform_sequence(convertible::Convertible)
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
