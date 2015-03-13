@@ -794,7 +794,7 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
       return convertible
     end
     error_by_key = (Any => Any)[]
-    value_by_key = OrderedDict(Any, Any)
+    value_by_key = OrderedDict{Any, Any}()
     for (key, value) in convertible.value
       key_converted = key_converter(Convertible(key, convertible.context))
       if key_converted.error !== nothing
@@ -812,14 +812,14 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
       end
     end
 
-    typed_value_by_key = OrderedDict(
+    typed_value_by_key = OrderedDict{
       key_type === nothing ?
         (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Nothing, keys(value_by_key))) :
         key_type,
       value_type === nothing ?
         (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Nothing, values(value_by_key))) :
         value_type,
-    )
+    }()
     for (key, value) in value_by_key
       typed_value_by_key[key] = value
     end
@@ -827,10 +827,10 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
     if isempty(error_by_key)
       return Convertible(typed_value_by_key, convertible.context)
     else
-      typed_error_by_key = OrderedDict(
+      typed_error_by_key = OrderedDict{
         key_type === nothing ? mapreduce(typeof, promote_type, Nothing, keys(error_by_key)) : key_type,
         value_type === nothing ? mapreduce(typeof, promote_type, Nothing, values(error_by_key)) : value_type,
-      )
+      }()
       for (key, error) in error_by_key
         typed_error_by_key[key] = error
       end
