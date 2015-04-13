@@ -22,7 +22,11 @@
 module Biryani
 
 
-export _, call, condition, Convertible, default, embed_error, empty_to_nothing, extract_when_singleton, fail, first_match, from_value, guess_bool, input_to_bool, input_to_email, input_to_float, input_to_int, input_to_url_name, item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct, test, test_between, test_equal, test_greater_or_equal, test_in, test_isa, to_bool, to_float, to_int, to_string, to_value, to_value_error, uniform_mapping, uniform_sequence
+export _, call, condition, Convertible, default, embed_error, empty_to_nothing, extract_when_singleton, fail,
+  first_match, from_value, guess_bool, input_to_bool, input_to_email, input_to_float, input_to_int, input_to_url_name,
+  item_or_sequence, item_to_singleton, log_info, log_warning, N_, noop, pipe, require, string_to_email, strip, struct,
+  test, test_between, test_equal, test_greater_or_equal, test_in, test_isa, to_bool, to_float, to_int, to_string,
+  to_value, to_value_error, uniform_mapping, uniform_sequence
 
 
 import Base: strip
