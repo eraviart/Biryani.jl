@@ -491,6 +491,12 @@ tuple_non_strict_converter = struct(
 @test Convertible("This is a string.") |> fail("Initial error.") |> test_isa(String) |> to_value_error == (
   "This is a string.", "Initial error.")
 
+# test_nothing
+@test Convertible(42) |> test_nothing() |> to_value_error == (42, "Unexpected value")
+@test Convertible(42) |> test_nothing(error = "No value allowed.") |> to_value_error == (42, "No value allowed.")
+@test Convertible("") |> test_nothing() |> to_value_error == ("", "Unexpected value")
+@test Convertible(nothing) |> test_nothing() |> to_value_error == (nothing, nothing)
+
 # to_bool
 @test Convertible("0") |> to_bool |> to_value === false
 @test Convertible("1") |> to_bool |> to_value === true

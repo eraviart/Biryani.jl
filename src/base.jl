@@ -637,6 +637,18 @@ function test_isa(data_type::Union(DataType, UnionType); error = nothing, handle
 end
 
 
+function test_nothing(; error = nothing)
+    """Return a converters that signals an error when value is not ``None``."""
+  return function run_test_nothing(convertible::Convertible)
+    if convertible.error !== nothing || convertible.value === nothing
+      return convertible
+    end
+    error = error === nothing ? context -> _(context, "Unexpected value") : error
+    return Convertible(convertible.value, convertible.context, error)
+  end
+end
+
+
 function to_bool(convertible::Convertible)
   """Convert a julia data to a boolean.
 
