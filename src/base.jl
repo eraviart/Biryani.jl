@@ -456,8 +456,9 @@ function struct(converters::Dict; default = nothing, drop_missing = false, drop_
         end
       end
     end
-    converted_value_by_key = (String => Any)[]
-    error_by_key = (String => Any)[]
+    # TODO Add a {T} to the function to parametrize the keys of the 2 below dicts?
+    converted_value_by_key = Dict()
+    error_by_key = Dict()
     for (key, converter) in converter_by_key
       converted = converter(Convertible(get(convertible.value, key, nothing), convertible.context))
       if converted.value !== nothing || (!drop_nothing && (!drop_missing || key in convertible.value))
