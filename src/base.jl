@@ -648,6 +648,8 @@ function test_nothing(; error = nothing)
   end
 end
 
+test_nothing(convertible::Convertible) = test_nothing()(convertible)
+
 
 function to_bool(convertible::Convertible)
   """Convert a julia data to a boolean.

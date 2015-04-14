@@ -496,6 +496,9 @@ tuple_non_strict_converter = struct(
 @test Convertible(42) |> test_nothing(error = "No value allowed.") |> to_value_error == (42, "No value allowed.")
 @test Convertible("") |> test_nothing() |> to_value_error == ("", "Unexpected value")
 @test Convertible(nothing) |> test_nothing() |> to_value_error == (nothing, nothing)
+@test Convertible(42) |> test_nothing |> to_value_error == (42, "Unexpected value")
+@test Convertible("") |> test_nothing |> to_value_error == ("", "Unexpected value")
+@test Convertible(nothing) |> test_nothing |> to_value_error == (nothing, nothing)
 
 # to_bool
 @test Convertible("0") |> to_bool |> to_value === false
