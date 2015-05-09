@@ -71,4 +71,21 @@ module JsonConverters
 end  # module JsonConverters
 
 
+module SlugConverters
+
+
+  export input_to_slug
+
+
+  import Slug: slugify
+
+  import ..Biryani: Convertible
+
+
+  include("slug.jl")
+
+
+end  # module SlugConverters
+
+
 end  # module Biryani

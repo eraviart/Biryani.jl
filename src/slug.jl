@@ -19,12 +19,14 @@
 # limitations under the License.
 
 
-using Base.Test
+function input_to_slug(convertible::Convertible; separator::Char = '-', transform::Function = lowercase)
+  """Simplify a string to a slug (ie a string containing only 0-9, A-Z, a-z & separators)."""
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  slug = slugify(convertible.value, separator = separator, transform = transform)
+  return Convertible(isempty(slug)? nothing : slug , convertible.context)
+end
 
-importall Biryani
-
-
-include("test_base.jl")
-include("test_dates.jl")
-include("test_json.jl")
-include("test_slug.jl")
+input_to_slug(; separator::Char = '-', transform::Function = lowercase) = convertible::Convertible -> input_to_slug(
+  convertible, separator = separator, transform = transform)
