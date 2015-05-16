@@ -31,6 +31,7 @@ export _, call, condition, Convertible, default, embed_error, empty_to_nothing, 
 
 import Base: strip
 
+import Compat: pipe
 import DataStructures: OrderedDict
 
 
