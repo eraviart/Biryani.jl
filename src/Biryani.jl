@@ -72,13 +72,13 @@ module JsonConverters
 end  # module JsonConverters
 
 
-module SlugConverters
+module SlugifyConverters
 
 
   export input_to_slug
 
 
-  import Slug: slugify
+  import Slugify: slugify
 
   import ..Biryani: Convertible
 
@@ -86,7 +86,7 @@ module SlugConverters
   include("slug.jl")
 
 
-end  # module SlugConverters
+end  # module SlugifyConverters
 
 
 end  # module Biryani

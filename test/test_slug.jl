@@ -19,7 +19,7 @@
 # limitations under the License.
 
 
-importall Biryani.SlugConverters
+importall Biryani.SlugifyConverters
 
 
 # input_to_slug
