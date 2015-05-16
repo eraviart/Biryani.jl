@@ -184,6 +184,20 @@ detect_unknown_values = condition(
 @test Convertible(nothing) |> input_to_int |> to_value === nothing
 @test Convertible("42") |> fail("Initial error.") |> input_to_int |> to_value_error == ("42", "Initial error.")
 
+# input_to_ipv4
+@test Convertible("127.0.0.1") |> input_to_ipv4 |> to_value == IPv4(127, 0, 0, 1)
+@test Convertible("0.0.0.0") |> input_to_ipv4 |> to_value == IPv4(0, 0, 0, 0)
+@test Convertible("   192.168.1.1\n  ") |> input_to_ipv4 |> to_value == IPv4(192, 168, 1, 1)
+@test Convertible("1.2.3") |> input_to_ipv4 |> to_value_error == ("1.2.3", "Invalid IPv4 address.")
+@test Convertible("1.2.3.4.5") |> input_to_ipv4 |> to_value_error == ("1.2.3.4.5", "Invalid IPv4 address.")
+@test Convertible("localhost") |> input_to_ipv4 |> to_value_error == ("localhost", "Invalid IPv4 address.")
+@test Convertible("hello.world.!.0") |> input_to_ipv4 |> to_value_error == ("hello.world.!.0", "Invalid IPv4 address.")
+@test Convertible("256.0.0.1") |> input_to_ipv4 |> to_value_error == ("256.0.0.1", "Invalid IPv4 address.")
+@test Convertible(nothing) |> input_to_ipv4 |> to_value === nothing
+@test Convertible("    \n  ") |> input_to_ipv4 |> to_value === nothing
+@test Convertible("127.0.0.1") |> fail("Initial error.") |> input_to_ipv4 |> to_value_error == ("127.0.0.1",
+  "Initial error.")
+
 # input_to_url_name
 @test Convertible("   Hello \n world!\n  ") |> input_to_url_name |> to_value == "hello_world!"
 @test Convertible("   Hello \n world!\n  ") |> input_to_url_name(separator = ' ') |> to_value == "hello world!"

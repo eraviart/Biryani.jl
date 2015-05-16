@@ -315,6 +315,13 @@ function input_to_int(; accept_expression = false)
 end
 
 
+input_to_ipv4(convertible::Convertible) = pipe(
+  strip,
+  string_to_ipv4,
+)(convertible)
+"""Convert a string to an IPv4 address."""
+
+
 function input_to_url_name(convertible::Convertible; separator = '_', stripmark = false)
   """Normalize a string to allow its use in an URL (or file system) path or a query parameter.
 
@@ -434,6 +441,25 @@ end
 
 string_to_email(; accept_ip_address = false) = convertible::Convertible -> string_to_email(convertible,
   accept_ip_address = accept_ip_address)
+
+
+function string_to_ipv4(convertible::Convertible)
+  """Convert a clean string to an IPv4 address.
+
+  .. note:: For a converter that doesn't require a clean string, see :func:`input_to_ipv4`.
+  """
+  if convertible.error !== nothing || convertible.value === nothing
+    return convertible
+  end
+  if !ismatch(r"^\d+\.\d+\.\d+\.\d+$", convertible.value)
+    return Convertible(convertible.value, convertible.context, N_("Invalid IPv4 address."))
+  end
+  bytes = map(int, split(convertible.value, '.'))
+  if !all(byte -> 0 <= byte <= 255, bytes)
+    return Convertible(convertible.value, convertible.context, N_("Invalid IPv4 address."))
+  end
+  return Convertible(IPv4(bytes...), convertible.context)
+end
 
 
 strip(convertible::Convertible) = pipe(call(strip), empty_to_nothing)(convertible)
