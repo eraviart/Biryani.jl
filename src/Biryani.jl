@@ -84,7 +84,7 @@ module SlugifyConverters
   import ..Biryani: Convertible
 
 
-  include("slug.jl")
+  include("slugify.jl")
 
 
 end  # module SlugifyConverters

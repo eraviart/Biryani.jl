@@ -27,4 +27,4 @@ importall Biryani
 include("test_base.jl")
 include("test_dates.jl")
 include("test_json.jl")
-include("test_slug.jl")
+include("test_slugify.jl")
