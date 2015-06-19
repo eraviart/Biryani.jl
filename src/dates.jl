@@ -19,7 +19,7 @@
 # limitations under the License.
 
 
-const year_or_month_or_day_re = r"(18|19|20)\d{2}(-(0[1-9]|1[0-2])(-([0-2]\d|3[0-1]))?)?$"
+const year_or_month_or_day_re = r"(15|16|17|18|19|20)\d{2}(-(0[1-9]|1[0-2])(-([0-2]\d|3[0-1]))?)?$"
 
 
 date_to_iso8601_string(convertible::Convertible) = call(date -> string(date))(convertible)
