@@ -596,6 +596,10 @@ tuple_non_strict_converter = struct(
 # Test tools.
 
 
+# is_valid
+@test Convertible("42") |> input_to_int |> is_valid === true
+@test Convertible("Hello world!") |> input_to_int |> is_valid === false
+
 # .value
 @test (Convertible("42") |> input_to_int).value == 42
 @test (Convertible("Hello world!") |> input_to_int).value == "Hello world!"

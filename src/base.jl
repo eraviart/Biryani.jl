@@ -343,6 +343,10 @@ function input_to_url_name(; separator = '_', stripmark = false)
 end
 
 
+is_valid(convertible::Convertible) = convertible.error === nothing
+"""Check a conversion and return true when it has no error, false otherwise."""
+
+
 function item_or_sequence(converters::Function...; drop_nothing = false, item_type = nothing, sequence_type = Array)
   """Return a converter that accepts either an item or a sequence of items and applies the given converter to them."""
   return convertible::Convertible -> condition(
