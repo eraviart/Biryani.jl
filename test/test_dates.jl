@@ -35,9 +35,15 @@ importall Biryani.DatesConverters
 @test Convertible("2012-03-04") |> iso8601_input_to_date |> to_value == Date(2012, 3, 4)
 @test Convertible("2012-03") |> iso8601_input_to_date |> to_value == Date(2012, 3, 1)
 @test Convertible("2012") |> iso8601_input_to_date |> to_value == Date(2012, 1, 1)
+@test Convertible("1500-01-01") |> iso8601_input_to_date |> to_value == Date(1500, 1, 1)
+@test Convertible("2099-12-31") |> iso8601_input_to_date |> to_value == Date(2099, 12, 31)
 @test Convertible("   2012-03-04\n  ") |> iso8601_input_to_date |> to_value == Date(2012, 3, 4)
 @test Convertible("   2012-03\n  ") |> iso8601_input_to_date |> to_value == Date(2012, 3, 1)
 @test Convertible("   2012\n  ") |> iso8601_input_to_date |> to_value == Date(2012, 1, 1)
+@test Convertible("1499-12-31") |> iso8601_input_to_date |> to_value_error == ("1499-12-31",
+  "Invalid ISO-8601 format for date.")
+@test Convertible("2100-01-01") |> iso8601_input_to_date |> to_value_error == ("2100-01-01",
+  "Invalid ISO-8601 format for date.")
 @test Convertible("2012-03-04 05:06:07") |> iso8601_input_to_date |> to_value_error == ("2012-03-04 05:06:07",
   "Invalid ISO-8601 format for date.")
 @test Convertible("2012-03-04T05:06:07") |> iso8601_input_to_date |> to_value_error == ("2012-03-04T05:06:07",
