@@ -493,7 +493,6 @@ tuple_non_strict_converter = struct(
 @test_throws MethodError Convertible('z') |> test_in(nothing)
 @test Convertible('a') |> fail("Initial error.") |> test_in("abcd") |> to_value_error == ('a', "Initial error.")
 
-
 # test_isa
 @test Convertible("This is a string.") |> test_isa(String) |> to_value == "This is a string."
 @test Convertible(42) |> test_isa(String) |> to_value_error == (42, "Value must be an instance of String.")
@@ -604,9 +603,7 @@ tuple_non_strict_converter = struct(
 # to_value
 @test Convertible("42") |> input_to_int |> to_value == 42
 @test_throws ErrorException Convertible("Hello world!") |> input_to_int |> to_value
-# @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> to_value === true
 
 # to_value_error
 @test Convertible("42") |> input_to_int |> to_value_error == (42, nothing)
 @test Convertible("Hello world!") |> input_to_int |> to_value_error == ("Hello world!", "Value must be an integer number.")
-# @test Convertible(42) |> to_string |> test_isa(String) |> input_to_bool |> to_value_error === (true, nothing)
