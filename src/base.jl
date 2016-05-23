@@ -36,7 +36,7 @@ type EmptyContext <: Context
 end
 
 
-_(context::EmptyContext, message::String) = message
+_(context::EmptyContext, message::AbstractString) = message
 
 
 N_(message) = message
@@ -120,7 +120,7 @@ function embed_error(value, error)
       for (child_key, child_error) in error
         child_error = embed_error(get(value, child_key, nothing), child_error)
         if child_error !== nothing
-          errors = get!(value, "errors", (typeof(child_key) => Any)[])
+          errors = get!(value, "errors", Dict{typeof(child_key), Any}())
           errors[child_key] = child_error
         end
       end
@@ -140,9 +140,9 @@ function embed_error(value, error)
       end
       return nothing
     end
-    if all(key -> isa(key, String) && isdigit(key) && 1 <= int(key) <= size(value, 1), error)
+    if all(key -> isa(key, AbstractString) && isdigit(key) && 1 <= parse(Int, key) <= size(value, 1), error)
       for (child_key, child_error) in error
-        child_error = embed_error(value[int(child_key)], child_error)
+        child_error = embed_error(value[parse(Int, child_key)], child_error)
         @assert(child_error === nothing, child_error)
         # if child_error !== nothing
         #   return error
@@ -179,9 +179,9 @@ end
 
 eval_error(context::Context, func::Function) = func(context)
 
-eval_error(context::Context, ::Nothing) = nothing
+eval_error(context::Context, ::Void) = nothing
 
-eval_error(context::Context, message::String) = _(context, message)
+eval_error(context::Context, message::AbstractString) = _(context, message)
 
 
 extract_when_singleton(convertible::Convertible) = condition(
@@ -203,9 +203,9 @@ function fail(convertible::Convertible; error = nothing)
   )
 end
 
-fail(error::String) = convertible::Convertible -> fail(convertible, error = error)
+fail(error::AbstractString) = convertible::Convertible -> fail(convertible, error = error)
 
-fail(; error::String = nothing) = convertible::Convertible -> fail(convertible, error = error)
+fail(; error::AbstractString = nothing) = convertible::Convertible -> fail(convertible, error = error)
 
 
 function first_match(converters::Function...; error = nothing)
@@ -254,7 +254,7 @@ function guess_bool(convertible::Convertible)
   if convertible.error !== nothing || convertible.value === nothing
     return convertible
   end
-  if !isa(convertible.value, String)
+  if !isa(convertible.value, AbstractString)
     return to_bool(convertible)
   end
   lower_value = strip(convertible.value) |> lowercase
@@ -421,7 +421,7 @@ function string_to_email(convertible::Convertible; accept_ip_address = false)
     return convertible
   end
   value = lowercase(convertible.value)
-  if beginswith(value, "mailto:")
+  if startswith(value, "mailto:")
     value = replace(value, "mailto:", "", 1)
   end
   split_value = split(value, '@')
@@ -458,7 +458,7 @@ function string_to_ipv4(convertible::Convertible)
   if !ismatch(r"^\d+\.\d+\.\d+\.\d+$", convertible.value)
     return Convertible(convertible.value, convertible.context, N_("Invalid IPv4 address."))
   end
-  bytes = map(int, split(convertible.value, '.'))
+  bytes = map(value -> parse(Int, value), split(convertible.value, '.'))
   if !all(byte -> 0 <= byte <= 255, bytes)
     return Convertible(convertible.value, convertible.context, N_("Invalid IPv4 address."))
   end
@@ -525,7 +525,7 @@ function struct(converters::Tuple; default = nothing)
       values = tuple(values..., nothing)
     end
     converted_values = cell(length(values_converter))
-    error_by_index = (Int => Any)[]
+    error_by_index = Dict{Int,Any}()
     for (index, (converter, value)) in enumerate(zip(values_converter, values))
       converted = converter(Convertible(value, convertible.context))
       converted_values[index] = converted.value
@@ -658,7 +658,7 @@ function test_in(values; error = nothing, handle_nothing = false)
 end
 
 
-function test_isa(data_type::Union(DataType, UnionType); error = nothing, handle_nothing = false)
+function test_isa(data_type::Union{DataType, Union}; error = nothing, handle_nothing = false)
   """Return a converter that accepts only an instance of given type."""
   return test(
     value -> isa(value, data_type),
@@ -703,15 +703,15 @@ end
 
 function to_bool(value, context::Context)
   try
-    return Convertible(bool(convert(Int, value)), context)
+    return Convertible(convert(Int, value) != 0, context)
   catch
     return Convertible(value, context, N_("Value must be a boolean."))
   end
 end
 
-function to_bool(value::String, context::Context)
+function to_bool(value::AbstractString, context::Context)
   try
-    return Convertible(bool(int(value)), context)
+    return Convertible(parse(Int, value) != 0, context)
   catch
     return Convertible(value, context, N_("Value must be a boolean."))
   end
@@ -727,7 +727,7 @@ function to_float(convertible::Convertible; accept_expression = false)
     return convertible
   end
   value = convertible.value
-  if accept_expression && isa(value, String)
+  if accept_expression && isa(value, AbstractString)
     value = strip(value)
     if !ismatch(r"^[ \t\n\r\d.+\-*/()]+$", value)
       return Convertible(value, convertible.context, N_("Value must be a valid floating point expression."))
@@ -745,7 +745,7 @@ function to_float(; accept_expression = false)
   return convertible::Convertible -> to_float(convertible; accept_expression = accept_expression)
 end
 
-function to_float(value::String, context::Context)
+function to_float(value::AbstractString, context::Context)
   try
     return Convertible(float(value), context)
   catch
@@ -771,7 +771,7 @@ function to_int(convertible::Convertible; accept_expression = false)
     return convertible
   end
   value = convertible.value
-  if accept_expression && isa(value, String)
+  if accept_expression && isa(value, AbstractString)
     value = strip(value)
     if !ismatch(r"^[ \t\n\r\d.+\-*/()]+$", value)
       return Convertible(value, convertible.context, N_("Value must be a valid integer expression."))
@@ -789,9 +789,9 @@ function to_int(; accept_expression = false)
   return convertible::Convertible -> to_int(convertible; accept_expression = accept_expression)
 end
 
-function to_int(value::String, context::Context)
+function to_int(value::AbstractString, context::Context)
   try
-    return Convertible(int(value), context)
+    return Convertible(parse(Int, value), context)
   catch
     return Convertible(value, context, N_("Value must be an integer number."))
   end
@@ -838,7 +838,7 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
-    error_by_key = (Any => Any)[]
+    error_by_key = Dict{Any, Any}()
     value_by_key = OrderedDict{Any, Any}()
     for (key, value) in convertible.value
       key_converted = key_converter(Convertible(key, convertible.context))
@@ -859,10 +859,10 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
 
     typed_value_by_key = OrderedDict{
       key_type === nothing ?
-        (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Nothing, keys(value_by_key))) :
+        (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Void, keys(value_by_key))) :
         key_type,
       value_type === nothing ?
-        (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Nothing, values(value_by_key))) :
+        (isempty(value_by_key) ? Any : mapreduce(typeof, promote_type, Void, values(value_by_key))) :
         value_type,
     }()
     for (key, value) in value_by_key
@@ -873,8 +873,8 @@ function uniform_mapping(key_converter::Function, value_converters::Function...;
       return Convertible(typed_value_by_key, convertible.context)
     else
       typed_error_by_key = OrderedDict{
-        key_type === nothing ? mapreduce(typeof, promote_type, Nothing, keys(error_by_key)) : key_type,
-        value_type === nothing ? mapreduce(typeof, promote_type, Nothing, values(error_by_key)) : value_type,
+        key_type === nothing ? mapreduce(typeof, promote_type, Void, keys(error_by_key)) : key_type,
+        value_type === nothing ? mapreduce(typeof, promote_type, Void, values(error_by_key)) : value_type,
       }()
       for (key, error) in error_by_key
         typed_error_by_key[key] = error
@@ -892,7 +892,7 @@ function uniform_sequence(converters::Function...; drop_nothing = false, item_ty
     if convertible.error !== nothing || convertible.value === nothing
       return convertible
     end
-    error_by_index = (Int => Any)[]
+    error_by_index = Dict{Any, Any}()
     values = Any[]
     for (index, value) in enumerate(convertible.value)
       converted = pipe(converters...)(Convertible(value, convertible.context))
@@ -905,7 +905,7 @@ function uniform_sequence(converters::Function...; drop_nothing = false, item_ty
     end
     return Convertible(
       collect(item_type === nothing ?
-        (isempty(values) ? Any : mapreduce(typeof, promote_type, Nothing, values)) :
+        (isempty(values) ? Any : mapreduce(typeof, promote_type, Void, values)) :
         item_type, values),
       convertible.context,
       isempty(error_by_index) ? nothing : error_by_index,

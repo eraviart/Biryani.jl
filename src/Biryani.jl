@@ -45,8 +45,6 @@ module DatesConverters
   export date_to_iso8601_string, iso8601_input_to_date, iso8601_string_to_date, to_date
 
 
-  import Dates: Date
-
   import ..Biryani: call, Context, Convertible, N_, pipe, strip, test
 
 

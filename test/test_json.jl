@@ -23,9 +23,9 @@ importall Biryani.JsonConverters
 
 
 # input_to_json
-@test Convertible("""{"a": 1, "b": [2, "three"]}""") |> input_to_json |> to_value == {"a" => 1, "b" => [2, "three"]}
+@test Convertible("""{"a": 1, "b": [2, "three"]}""") |> input_to_json |> to_value == Dict("a" => 1, "b" => [2, "three"])
 @test Convertible("""      {"a": 1, "b": [2, "three"]}   """) |> input_to_json |> to_value ==
-  {"a" => 1, "b" => [2, "three"]}
+  Dict("a" => 1, "b" => [2, "three"])
 @test Convertible("null") |> input_to_json |> to_value == nothing
 @test Convertible("   null   ") |> input_to_json |> to_value == nothing
 @test Convertible("Hello world!") |> input_to_json |> to_value_error == ("Hello world!", "Invalid JSON")

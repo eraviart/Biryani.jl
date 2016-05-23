@@ -52,9 +52,15 @@ function to_date(convertible::Convertible)
   # return Convertible(Date(convertible.value), convertible.context)
 end
 
-to_date(value::(Int...), context::Context) = Convertible(Date(value...), context)
+to_date(year::Int, context::Context) = Convertible(Date(year), context)
+to_date(year::Int, month::Int, context::Context) = Convertible(Date(year, month), context)
+to_date(year::Int, month::Int, day::Int, context::Context) = Convertible(Date(year, month, day), context)
 
-function to_date(value::String, context::Context)
+to_date(value::Tuple{Int}, context::Context) = Convertible(Date(value[1]), context)
+to_date(value::Tuple{Int, Int}, context::Context) = Convertible(Date(value[1], value[2]), context)
+to_date(value::Tuple{Int, Int, Int}, context::Context) = Convertible(Date(value[1], value[2], value[3]), context)
+
+function to_date(value::AbstractString, context::Context)
   if !('-' in value)
     # Work around bug in Julia 0.3: Date("2013") throws:
     # ERROR: ArgumentError("Delimiter mismatch. Couldn't find first delimiter, \"-\", in date string")

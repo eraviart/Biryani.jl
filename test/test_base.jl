@@ -23,7 +23,7 @@
 
 
 # call
-@test Convertible("42") |> call(int) |> to_value == 42
+@test Convertible("42") |> call(value -> parse(Int, value)) |> to_value == 42
 @test Convertible([3, 2, 1]) |> call(sort) |> to_value == [1, 2, 3]
 @test Convertible(42) |> call(value -> value + 1) |> to_value == 43
 @test Convertible(nothing) |> call(value -> value + 1) |> to_value === nothing
@@ -57,8 +57,8 @@ detect_unknown_values = condition(
 @test Convertible(" ") |> strip |> empty_to_nothing |> to_value === nothing
 @test Convertible([]) |> empty_to_nothing |> to_value === nothing
 @test Convertible([42, 43]) |> empty_to_nothing |> to_value == [42, 43]
-@test Convertible({}) |> empty_to_nothing |> to_value === nothing
-@test Convertible(["answer" => 42]) |> empty_to_nothing |> to_value == ["answer" => 42]
+@test Convertible(Dict()) |> empty_to_nothing |> to_value === nothing
+@test Convertible(Dict("answer" => 42)) |> empty_to_nothing |> to_value == Dict("answer" => 42)
 @test Convertible(nothing) |> empty_to_nothing |> to_value === nothing
 @test Convertible("") |> fail("Initial error.") |> empty_to_nothing |> to_value_error == ("", "Initial error.")
 
@@ -213,7 +213,7 @@ detect_unknown_values = condition(
 @test Convertible(["42"]) |> item_or_sequence(input_to_int) |> to_value == 42
 @test Convertible(["42", "43"]) |> item_or_sequence(input_to_int) |> to_value == [42, 43]
 @test Convertible(["42", "43", "Hello world!"]) |> item_or_sequence(input_to_int) |> to_value_error == (
-  [42, 43, "Hello world!"], [3 => "Value must be an integer number."])
+  [42, 43, "Hello world!"], Dict(3 => "Value must be an integer number."))
 @test Convertible(nothing) |> item_or_sequence(input_to_int) |> to_value === nothing
 @test Convertible([nothing]) |> item_or_sequence(input_to_int, drop_nothing = true) |> to_value == []
 @test Convertible([nothing, nothing]) |> item_or_sequence(input_to_int) |> to_value == [nothing, nothing]
@@ -236,8 +236,8 @@ detect_unknown_values = condition(
 # pipe
 @test_throws MethodError Convertible(42) |> input_to_bool
 @test_throws MethodError Convertible(42) |> pipe(input_to_bool)
-@test Convertible(42) |> pipe(test_isa(String), input_to_bool) |> to_value_error == (42,
-  "Value must be an instance of String.")
+@test Convertible(42) |> pipe(test_isa(AbstractString), input_to_bool) |> to_value_error == (42,
+  "Value must be an instance of AbstractString.")
 @test Convertible(42) |> pipe(to_string, input_to_bool) |> to_value === true
 @test Convertible(42) |> pipe() |> to_value == 42
 @test Convertible(42) |> fail("Initial error.") |> pipe(to_string, input_to_bool) |> to_value_error == (42,
@@ -259,90 +259,90 @@ detect_unknown_values = condition(
 
 # struct
 dict_strict_converter = struct(
-  [
+  Dict(
     "name" => pipe(strip, require),
     "age" => input_to_int,
     "email" => input_to_email,
-  ],
+  ),
 )
-@test Convertible([
+@test Convertible(Dict(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
-]) |> dict_strict_converter |> to_value == [
+)) |> dict_strict_converter |> to_value == Dict(
   "name" => "John Doe",
   "age" => 72,
   "email" => "john@doe.name",
-]
-@test Convertible([
+)
+@test Convertible(Dict(
   "name" => "John Doe",
   "email" => "john@doe.name",
-]) |> dict_strict_converter |> to_value == [
-  "name" => "John Doe",
-  "age" => nothing,
-  "email" => "john@doe.name",
-]
-@test Convertible([
+)) |> dict_strict_converter |> to_value == Dict(
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
-]) |> dict_strict_converter |> to_value == [
+)
+@test Convertible(Dict(
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
-]
-@test Convertible([
+)) |> dict_strict_converter |> to_value == Dict(
+  "name" => "John Doe",
+  "age" => nothing,
+  "email" => "john@doe.name",
+)
+@test Convertible(Dict(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
   "phone" => "   +33 9 12 34 56 78   ",
-]) |> dict_strict_converter |> to_value_error == (
-  [
+)) |> dict_strict_converter |> to_value_error == (
+  Dict(
     "name" => "John Doe",
     "age" => 72,
     "email" => "john@doe.name",
     "phone" => "   +33 9 12 34 56 78   ",
-  ],
-  [
+  ),
+  Dict(
     "phone" => "Unexpected item.",
-  ],
+  ),
 )
 dict_non_strict_converter = struct(
-  [
+  Dict(
     "name" => pipe(strip, require),
     "age" => input_to_int,
     "email" => input_to_email,
-  ],
+  ),
   default = strip,
 )
-@test Convertible([
+@test Convertible(Dict(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
-]) |> dict_non_strict_converter |> to_value == [
+)) |> dict_non_strict_converter |> to_value == Dict(
   "name" => "John Doe",
   "age" => 72,
   "email" => "john@doe.name",
-]
-@test Convertible([
+)
+@test Convertible(Dict(
   "name" => "John Doe",
   "email" => "john@doe.name",
-]) |> dict_non_strict_converter |> to_value == [
+)) |> dict_non_strict_converter |> to_value == Dict(
   "name" => "John Doe",
   "age" => nothing,
   "email" => "john@doe.name",
-]
-@test Convertible([
+)
+@test Convertible(Dict(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
   "phone" => "   +33 9 12 34 56 78   ",
-]) |> dict_non_strict_converter |> to_value == [
+)) |> dict_non_strict_converter |> to_value == Dict(
   "name" => "John Doe",
   "age" => 72,
   "email" => "john@doe.name",
   "phone" => "+33 9 12 34 56 78",
-]
+)
 tuple_strict_converter = struct(
   (
     pipe(strip, require),
@@ -380,9 +380,9 @@ tuple_strict_converter = struct(
     "john@doe.name",
     "   +33 9 12 34 56 78   ",
   ),
-  [
+  Dict(
     4 => "Unexpected item.",
-  ],
+  ),
 )
 tuple_non_strict_converter = struct(
   (
@@ -422,27 +422,27 @@ tuple_non_strict_converter = struct(
   "+33 9 12 34 56 78",
 )
 @test Convertible(nothing) |> dict_strict_converter |> to_value === nothing
-@test Convertible([
+@test Convertible(Dict(
   "name" => "John Doe",
   "age" => "72",
   "email" => "john@doe.name",
-]) |> fail("Initial error.") |> dict_strict_converter |> to_value_error == (
-  [
+)) |> fail("Initial error.") |> dict_strict_converter |> to_value_error == (
+  Dict(
     "name" => "John Doe",
     "age" => "72",
     "email" => "john@doe.name",
-  ],
+  ),
   "Initial error.")
 
 # test
-@test Convertible("hello") |> test(value -> isa(value, String)) |> to_value == "hello"
-@test Convertible(1) |> test(value -> isa(value, String)) |> to_value_error == (1, "Test failed.")
-@test Convertible(1) |> test(value -> isa(value, String), error = "Value is not a string.") |> to_value_error == (1,
+@test Convertible("hello") |> test(value -> isa(value, AbstractString)) |> to_value == "hello"
+@test Convertible(1) |> test(value -> isa(value, AbstractString)) |> to_value_error == (1, "Test failed.")
+@test Convertible(1) |> test(value -> isa(value, AbstractString), error = "Value is not a string.") |> to_value_error == (1,
   "Value is not a string.")
-@test Convertible(nothing) |> test(value -> isa(value, String)) |> to_value === nothing
-@test Convertible(nothing) |> test(value -> isa(value, String), handle_nothing = true) |> to_value_error == (nothing,
+@test Convertible(nothing) |> test(value -> isa(value, AbstractString)) |> to_value === nothing
+@test Convertible(nothing) |> test(value -> isa(value, AbstractString), handle_nothing = true) |> to_value_error == (nothing,
   "Test failed.")
-@test Convertible("hello") |> fail("Initial error.") |> test(value -> isa(value, String)) |> to_value_error == ("hello",
+@test Convertible("hello") |> fail("Initial error.") |> test(value -> isa(value, AbstractString)) |> to_value_error == ("hello",
   "Initial error.")
 
 # test_between
@@ -456,7 +456,7 @@ tuple_non_strict_converter = struct(
 
 # test_equal
 @test Convertible(42) |> test_equal(42) |> to_value == 42
-@test Convertible(["a" => 1, "b" => 2]) |> test_equal(["a" => 1, "b" => 2]) |> to_value == ["a" => 1, "b" => 2]
+@test Convertible(Dict("a" => 1, "b" => 2)) |> test_equal(Dict("a" => 1, "b" => 2)) |> to_value == Dict("a" => 1, "b" => 2)
 @test Convertible(41) |> test_equal(42) |> to_value_error == (41, "Value must be equal to 42.")
 @test Convertible(41) |> test_equal(42, error = "Value is not the answer.") |> to_value_error == (41,
   "Value is not the answer.")
@@ -481,12 +481,12 @@ tuple_non_strict_converter = struct(
 @test Convertible('a') |> test_in("abcd") |> to_value == 'a'
 @test Convertible('a') |> test_in(['a', 'b', 'c', 'd']) |> to_value == 'a'
 @test Convertible('z') |> test_in(['a', 'b', 'c', 'd']) |> to_value_error == ('z',
-  "Value must belong to Char[a,b,c,d].")
-@test Convertible('z') |> test_in(Set('a', 'b', 'c', 'd')) |> to_value_error == ('z',
-  "Value must belong to Char[d,b,c,a].")
+  "Value must belong to ['a','b','c','d'].")
+@test Convertible('z') |> test_in(Set(['a', 'b', 'c', 'd'])) |> to_value_error == ('z',
+  "Value must belong to ['d','b','c','a'].")
 @test Convertible('z') |> test_in(['a', 'b', 'c', 'd'], error = """Value must be a letter less than "e".""") |>
   to_value_error == ('z', """Value must be a letter less than "e".""")
-@test Convertible('z') |> test_in([]) |> to_value_error == ('z', "Value must belong to None[].")
+@test Convertible('z') |> test_in([]) |> to_value_error == ('z', "Value must belong to Any[].")
 @test Convertible(nothing) |> test_in("abcd") |> to_value == nothing
 @test Convertible(nothing) |> test_in("abcd", handle_nothing = true) |> to_value_error == (nothing,
   "Value must belong to abcd.")
@@ -494,14 +494,14 @@ tuple_non_strict_converter = struct(
 @test Convertible('a') |> fail("Initial error.") |> test_in("abcd") |> to_value_error == ('a', "Initial error.")
 
 # test_isa
-@test Convertible("This is a string.") |> test_isa(String) |> to_value == "This is a string."
-@test Convertible(42) |> test_isa(String) |> to_value_error == (42, "Value must be an instance of String.")
-@test Convertible(42) |> test_isa(String, error = "Value is not a string.") |> to_value_error == (42,
+@test Convertible("This is a string.") |> test_isa(AbstractString) |> to_value == "This is a string."
+@test Convertible(42) |> test_isa(AbstractString) |> to_value_error == (42, "Value must be an instance of AbstractString.")
+@test Convertible(42) |> test_isa(AbstractString, error = "Value is not a string.") |> to_value_error == (42,
   "Value is not a string.")
-@test Convertible(nothing) |> test_isa(String) |> to_value === nothing
-@test Convertible(nothing) |> test_isa(String, handle_nothing = true) |> to_value_error == (nothing,
-  "Value must be an instance of String.")
-@test Convertible("This is a string.") |> fail("Initial error.") |> test_isa(String) |> to_value_error == (
+@test Convertible(nothing) |> test_isa(AbstractString) |> to_value === nothing
+@test Convertible(nothing) |> test_isa(AbstractString, handle_nothing = true) |> to_value_error == (nothing,
+  "Value must be an instance of AbstractString.")
+@test Convertible("This is a string.") |> fail("Initial error.") |> test_isa(AbstractString) |> to_value_error == (
   "This is a string.", "Initial error.")
 
 # test_nothing
@@ -561,29 +561,29 @@ tuple_non_strict_converter = struct(
 @test Convertible(42) |> fail("Initial error.") |> to_string |> to_value_error == (42, "Initial error.")
 
 # uniform_mapping
-@test Convertible(["a" => "1", "b" => "2"]) |> uniform_mapping(strip, input_to_int) |> to_value == ["a" => 1, "b" => 2]
-@test Convertible(["   answer\n  " => "42"]) |> uniform_mapping(strip, input_to_int) |> to_value == ["answer" => 42]
-@test Convertible(["a" => "1", "b" => "2", "c" => 3]) |> uniform_mapping(strip, test_isa(String), input_to_int) |>
-  to_value_error == (["a" => 1, "b" => 2, "c" => 3], ["c" => "Value must be an instance of String."])
-@test Convertible(["a" => "1", "b" => "2", "c" => 3]) |>
-  uniform_mapping(strip, condition(test_isa(String), input_to_int)) |>
-  to_value == ["a" => 1, "b" => 2, "c" => 3]
-@test Convertible({}) |> uniform_mapping(strip, input_to_int) |> to_value == (Nothing => Nothing)[]
-@test Convertible([nothing => "42"]) |> uniform_mapping(strip, input_to_int) |> to_value == [nothing => 42]
-@test Convertible(["   \n  " => "42"]) |> uniform_mapping(strip, input_to_int) |> to_value == [nothing => 42]
-@test Convertible([nothing => "42"]) |> uniform_mapping(strip, input_to_int, drop_nothing_keys = true) |>
-  to_value == (Nothing => Nothing)[]
+@test Convertible(Dict("a" => "1", "b" => "2")) |> uniform_mapping(strip, input_to_int) |> to_value == Dict("a" => 1, "b" => 2)
+@test Convertible(Dict("   answer\n  " => "42")) |> uniform_mapping(strip, input_to_int) |> to_value == Dict("answer" => 42)
+@test Convertible(Dict("a" => "1", "b" => "2", "c" => 3)) |> uniform_mapping(strip, test_isa(AbstractString), input_to_int) |>
+  to_value_error == (Dict("a" => 1, "b" => 2, "c" => 3), Dict("c" => "Value must be an instance of AbstractString."))
+@test Convertible(Dict("a" => "1", "b" => "2", "c" => 3)) |>
+  uniform_mapping(strip, condition(test_isa(AbstractString), input_to_int)) |>
+  to_value == Dict("a" => 1, "b" => 2, "c" => 3)
+@test Convertible(Dict()) |> uniform_mapping(strip, input_to_int) |> to_value == Dict{Void,Void}()
+@test Convertible(Dict(nothing => "42")) |> uniform_mapping(strip, input_to_int) |> to_value == Dict(nothing => 42)
+@test Convertible(Dict("   \n  " => "42")) |> uniform_mapping(strip, input_to_int) |> to_value == Dict(nothing => 42)
+@test Convertible(Dict(nothing => "42")) |> uniform_mapping(strip, input_to_int, drop_nothing_keys = true) |>
+  to_value == Dict{Void,Void}()
     # >>> uniform_mapping(cleanup_line, input_to_int)(None)
     # (None, None)
 @test Convertible(nothing) |> uniform_mapping(strip, input_to_int) |> to_value === nothing
-@test Convertible(["a" => "1", "b" => "2"]) |> fail("Initial error.") |> uniform_mapping(strip, input_to_int) |>
-  to_value_error == (["a" => "1", "b" => "2"], "Initial error.")
+@test Convertible(Dict("a" => "1", "b" => "2")) |> fail("Initial error.") |> uniform_mapping(strip, input_to_int) |>
+  to_value_error == (Dict("a" => "1", "b" => "2"), "Initial error.")
 
 # uniform_sequence
 @test Convertible(["42"]) |> uniform_sequence(input_to_int) |> to_value == [42]
 @test Convertible(["42", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, 43]
 @test Convertible(["42", "43", "Hello world!"]) |> uniform_sequence(input_to_int) |> to_value_error == (
-  [42, 43, "Hello world!"], [3 => "Value must be an integer number."])
+  [42, 43, "Hello world!"], Dict(3 => "Value must be an integer number."))
 @test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int) |> to_value == [nothing, nothing]
 @test Convertible([nothing, nothing]) |> uniform_sequence(input_to_int, drop_nothing = true) |> to_value == []
 @test Convertible(["42", "    \n  ", "43"]) |> uniform_sequence(input_to_int) |> to_value == [42, nothing, 43]
